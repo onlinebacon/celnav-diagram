@@ -1,8 +1,8 @@
 import DrawingContext from './drawing.js';
-import { smooth } from './ease.js';
-import * as Media from './media.js';
+import * as Video from './video.js';
 import * as Trig from './trig.js';
 import { vec2 } from './vec2.js';
+import { linear, smooth } from './ease.js';
 
 let ctx = true ? null : new DrawingContext(null);
 
@@ -13,39 +13,55 @@ const RGB = {
 	up: '127, 0, 255',
 	star: '255, 192, 96',
 	starSight: '255, 192, 0',
-	starGPSight: '255, 192, 0',
+	earthCenterStarLine: '255, 192, 0',
+	arc: '255, 64, 8',
+	writing: '255, 255, 255',
 };
 
 let arrowGap = 7;
 let arrowEnd = 60;
+let textGap = 7;
 let pxMileRatio = 160/3959;
-let currentLines = [];
-let comment = Media.create(() => {
-	ctx.comment(currentLines);
-});
 
-Media.add(comment);
-
-const fadeIn = (obj, duration = 1000) => {
-	obj.opacity = 0;
-	Media.add(obj.media);
-	return Media.animate(duration, t => obj.opacity = t);
+const setSpeed = (value) => {
+	Video.write(() => Video.setSpeed(value));
 };
 
-const fadeOut = async (obj, duration = 1000) => {
-	obj.opacity = 0;
-	await Media.animate(duration, t => obj.opacity = 1 - t);
-	Media.remove(obj.media);
+const animateValue = (duration, obj, attribute, target, ease = smooth) => {
+	const init = () => {
+		const base = obj[attribute];
+		const targetValue = typeof target === 'function' ? target() : target;
+		const dif = targetValue - base;
+		return { base, dif };
+	};
+	const step = (t, { base, dif }) => {
+		obj[attribute] = base + dif*ease(t);
+	};
+	Video.writeAnimation(duration, step, init);
 };
 
-const speedUp = () => Media.setSpeed(128);
-const normalSpeed = () => Media.setSpeed(1);
+const fadeIn = (obj, duration = 250) => {
+	Video.write(() => {
+		obj.opacity = 0;
+		Video.add(obj.media);
+	});
+	Video.writeAnimation(duration, t => obj.opacity = t);
+};
+
+const fadeOut = (obj, duration = 250) => {
+	Video.write(() => {
+		obj.opacity = 1;
+		Video.add(obj.media);
+	});
+	Video.writeAnimation(duration, t => obj.opacity = 1 - t);
+	Video.write(() => Video.remove(obj));
+};
 
 const earth = {
 	pos: vec2(400, 300),
 	radiusMiles: 3959,
 	opacity: 1,
-	media: Media.create(() => {
+	media: Video.create(() => {
 		ctx.circle(
 			earth.pos,
 			earth.radiusMiles*pxMileRatio,
@@ -57,21 +73,21 @@ const earth = {
 
 const earthCenter = {
 	opacity: 1,
-	media: Media.create(() => {
+	media: Video.create(() => {
 		ctx.spot(earth.pos, `rgba(${RGB.spot}, ${earthCenter.opacity})`);
 	}),
 };
 
 const gravityArrows = {
 	opacity: 0,
-	media: Media.create(() => {
+	media: Video.create(() => {
 		const n = 12;
 		const r = earth.radiusMiles*pxMileRatio;
 		for (let i=0; i<n; ++i) {
 			const dir = vec2(0, 1).rot(Trig.deg(360/n*i));
 			const a = earth.pos.plus(dir.scale(r - arrowGap));
 			const b = earth.pos.plus(dir.scale(r - arrowEnd));
-			ctx.arrow(a, b, `rgba(${RGB.down}, ${gravityArrows.opacity})`);
+			ctx.arrow(a, b, `rgba(${RGB.down}, ${gravityArrows.opacity/2})`);
 		}
 	}),
 };
@@ -81,8 +97,8 @@ const observer = {
 	pos: vec2(0, 0),
 	defAngle: Trig.deg(15),
 	angle: Trig.deg(15),
-	heightMiles: 200,
-	media: Media.create(() => {
+	heightMiles: 150,
+	media: Video.create(() => {
 		const h = (earth.radiusMiles + observer.heightMiles)*pxMileRatio;
 		observer.pos = earth.pos.plus(vec2(0, h).rot(observer.angle));
 		ctx.spot(observer.pos, `rgba(${RGB.spot}, ${observer.opacity})`);
@@ -91,7 +107,7 @@ const observer = {
 
 const downArrow = {
 	opacity: 1,
-	media: Media.create(() => {
+	media: Video.create(() => {
 		const a = observer.pos.plus(vec2(0, -arrowGap).rot(observer.angle));
 		const b = observer.pos.plus(vec2(0, -arrowEnd).rot(observer.angle));
 		ctx.arrow(a, b, `rgba(${RGB.down}, ${downArrow.opacity})`);
@@ -100,7 +116,7 @@ const downArrow = {
 
 const upArrow = {
 	opacity: 1,
-	media: Media.create(() => {
+	media: Video.create(() => {
 		const a = observer.pos.plus(vec2(0, arrowGap).rot(observer.angle));
 		const b = observer.pos.plus(vec2(0, arrowEnd).rot(observer.angle));
 		ctx.arrow(a, b, `rgba(${RGB.up}, ${upArrow.opacity})`);
@@ -109,10 +125,10 @@ const upArrow = {
 
 const star = {
 	opacity: 1,
-	distMiles: 5000,
-	angle: Trig.deg(60),
+	distMiles: 3000,
+	angle: Trig.deg(50),
 	pos: vec2(0, 0),
-	media: Media.create(() => {
+	media: Video.create(() => {
 		const centerDist = (earth.radiusMiles + star.distMiles)*pxMileRatio;
 		const offset = vec2(0, centerDist).rot(star.angle);
 		star.pos = earth.pos.plus(offset);
@@ -122,7 +138,7 @@ const star = {
 
 const starDir = {
 	opacity: 1,
-	media: Media.create(() => {
+	media: Video.create(() => {
 		const dir = star.pos.minus(observer.pos).normalized();
 		const a = observer.pos.plus(dir.scale(arrowGap));
 		const b = observer.pos.plus(dir.scale(arrowEnd));
@@ -133,110 +149,175 @@ const starDir = {
 const starGP = {
 	pos: vec2(0, 0),
 	opacity: 1,
-	media: Media.create(() => {
+	media: Video.create(() => {
 		const r = earth.radiusMiles*pxMileRatio;
 		starGP.pos = earth.pos.plus(vec2(0, r).rot(star.angle));
 		ctx.spot(starGP.pos, `rgba(${RGB.spot}, ${starGP.opacity})`);
 	}),
 };
 
-const starGPSight = {
+const earthCenterStarLine = {
 	opacity: 1,
-	media: Media.create(() => {
-		const color = `rgba(${RGB.starGPSight}, ${starGPSight.opacity*0.4})`;
+	media: Video.create(() => {
+		const color = `rgba(${RGB.earthCenterStarLine}, ${earthCenterStarLine.opacity*0.4})`;
 		ctx.line(earth.pos, star.pos, color);
 	}),
 };
 
-const steps = [
-	// speedUp,
-	`Let's say the earth is a perfect sphere`,
-	() => fadeIn(earth),
-	1500,
-	`This white dot represents its very center`,
-	() => fadeIn(earthCenter),
-	2500,
-	`In this earth, the direction of down is wherever the center is`,
-	() => fadeIn(gravityArrows, 2000),
-	1000,
-	() => fadeOut(gravityArrows),
-	1000,
-	`Let's place an observer close to the earth's surface`,
-	500,
-	() => fadeIn(observer),
-	2500,
-	`This green arrow shows the direction of down for this observer`,
-	() => fadeIn(downArrow),
-	2500,
-	`The purple arrow points in the opposite direction\nand it establishes where up is`,
-	() => fadeIn(upArrow),
-	3500,
-	'',
-	() => {
-		const startPos = earth.pos;
-		const endPos = vec2(250, 210);
-		const startRatio = pxMileRatio;
-		const endRatio = 250/3959;
-		return Media.animate(t => {
-			t = smooth(t);
-			earth.pos = startPos.interpolate(endPos, t);
-			pxMileRatio = startRatio + (endRatio - startRatio)*t;
-		});
-	},
-	`Let's place a star somewhere near the earth`,
-	500,
-	() => fadeIn(star),
-	1500,
-	`Let's draw an arrow showing the direction\nin which the observer sees the star`,
-	3000,
-	() => fadeIn(starDir),
-	2000,
-	`If we move the observer towards the star`,
-	1000,
-	() => {
-		const a0 = observer.angle;
-		const a1 = star.angle;
-		return Media.animate(2000, t => {
-			observer.angle = a0 + (a1 - a0)*smooth(t);
-		});
-	},
-	`At some point, the direction to the\nstar matches the direction of up`,
-	3000,
-	`The point at the surface where the star is\nexactly upwards is called the GP of that star`,
-	() => fadeIn(starGP, 500),
-	3500,
-	`Also, if you create a straight line\nconnecting the center of the earth and the star`,
-	5000,
-	// normalSpeed,
-	`this line will go straight through the GP`,
-	() => fadeIn(starGPSight),
-	2000,
-	'',
-	() => {
-		const a0 = star.angle;
-		const a1 = observer.defAngle;
-		return Media.animate(2000, t => {
-			observer.angle = a0 + (a1 - a0)*smooth(t);
-		});
-	},
-];
+const observerGP = {
+	pos: vec2(0, 0),
+	opacity: 1,
+	media: Video.create(() => {
+		const r = earth.radiusMiles*pxMileRatio;
+		observerGP.pos = earth.pos.plus(vec2(0, r).rot(observer.angle));
+		ctx.spot(observerGP.pos, `rgba(${RGB.spot}, ${observerGP.opacity})`);
+	}),
+};
+
+const arc = {
+	opacity: 1,
+	media: Video.create(() => {
+		const a = Trig.deg(90) - star.angle;
+		const b = Trig.deg(90) - observer.angle;
+		ctx.lineWidth(2);
+		ctx.arc(earth.pos, earth.radiusMiles*pxMileRatio, a, b, `rgba(${RGB.arc}, ${arc.opacity})`);
+	}),
+};
+
+const buildRadius = () => {
+	const obj = {
+		opacity: 1,
+		t: 1,
+		dir: 0,
+		media: Video.create(() => {
+			const color = `rgba(${RGB.writing}, ${obj.opacity})`;
+			const miles = earth.radiusMiles*obj.t;
+			const a = earth.pos;
+			const b = earth.pos.plus(vec2(0, miles*pxMileRatio).rot(obj.dir));
+			const textPos = a.plus(b).scale(0.5).minus(vec2(textGap, 0));
+			const text = Math.round(miles) + ' mi';
+			ctx.line(a, b, color);
+			ctx.fontSize(14).textBaseline('middle').textAlign('right').text(text, textPos, color);
+		}),
+	};
+	return obj;
+};
+
+const radius1 = buildRadius();
+const radius2 = buildRadius();
+
+const height = {
+	opacity: 1,
+	dir: 0,
+	t: 1,
+	media: Video.create(() => {
+		const color = `rgba(${RGB.writing}, ${height.opacity})`;
+		const dif = observer.pos.minus(observerGP.pos);
+		const len = dif.len()*height.t;
+		const miles = len/pxMileRatio;
+		const a = observerGP.pos;
+		const b = a.plus(dif.normalized().scale(len));
+		const textPos = a.plus(b).scale(0.5).minus(vec2(textGap, 0));
+		const text = Math.round(miles) + ' mi';
+		ctx.line(a, b, color);
+		ctx.fontSize(14).textBaseline('middle').textAlign('right').text(text, textPos, color);
+	}),
+};
+
+const build = () => {
+	setSpeed(1);
+
+	fadeIn(earth);
+	
+	fadeIn(earthCenter);
+	
+	fadeIn(gravityArrows);
+	fadeOut(gravityArrows);
+	
+	fadeIn(observer);
+	
+	fadeIn(downArrow);
+
+	fadeIn(upArrow);
+
+	Video.writeAnimation(1000, (t, { pos_a, pos_b, ratio_a, ratio_b }) => {
+		t = smooth(t);
+		earth.pos = pos_a.interpolate(pos_b, t);
+		pxMileRatio = ratio_a + (ratio_b - ratio_a)*t;
+	}, () => ({
+		pos_a: vec2(...earth.pos),
+		pos_b: vec2(100, 100),
+		ratio_a: pxMileRatio,
+		ratio_b: 400/3959,
+	}));
+
+	fadeIn(star);
+	
+	fadeIn(starDir);
+	
+	animateValue(1000, observer, 'angle', star.angle + Trig.deg(10));
+	animateValue(1000, observer, 'angle', star.angle);
+	
+	fadeIn(earthCenterStarLine, 1000);
+	
+	fadeIn(starGP);
+	
+	animateValue(2000, observer, 'angle', observer.defAngle);
+	
+	fadeIn(observerGP);
+
+	Video.write(() => {
+		arc.opacity = 0;
+		Video.add(arc.media);
+		Video.moveBelow(arc.media, starGP.media);
+	})
+	fadeIn(arc);
+
+	Video.write(() => {
+		radius1.opacity = 0;
+		radius1.t = 0;
+		Video.add(radius1.media);
+	});
+	
+	Video.writeAnimation(1000, t => {
+		radius1.t = smooth(t);
+		radius1.opacity = t;
+	});
+	
+	animateValue(1000, radius1, 'dir', () => observer.angle);
+	
+	Video.write(() => {
+		height.opacity = 0;
+		height.t = 0;
+		Video.add(height.media);
+	});
+
+	Video.writeAnimation(1000, t => {
+		height.t = smooth(t);
+		height.opacity = t;
+	});
+	
+	Video.write(() => {
+		radius2.opacity = 0;
+		Video.add(radius2.media);
+	});
+	Video.writeAnimation(1000, t => {
+		radius2.opacity = Math.min(1, t*5);
+		radius2.dir = observer.angle + smooth(t)*(star.angle - observer.angle);
+	});
+
+	Video.writeDelay(duration);
+};
 
 export const init = async (canvas) => {
 	ctx = new DrawingContext(canvas);
-	Media.setBeforeFrame(() => {
+	Video.setBeforeFrame(() => {
 		ctx.ctx.fillStyle = '#111';
 		ctx.ctx.fillRect(0, 0, canvas.width, canvas.height);
 	});
-	Media.start();
-	for (const step of steps) {
-		const type = typeof step;
-		if (type === 'string') {
-			currentLines = step.trim().split(/\s*\n\s*/);
-			Media.moveUp(comment);
-		} else if (type === 'number') {
-			await Media.delay(step);
-		} else {
-			await step();
-		}
-	}
+	build();
+};
+
+export const start = () => {
+	Video.start();
 };

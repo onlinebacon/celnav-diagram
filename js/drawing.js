@@ -10,7 +10,6 @@ export default class DrawingContext {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
 		this.setDimensions(800, 600);
-		this.ctx.lineCap = 'round';
 	}
 	setDimensions(width, height) {
 		this.w = width;
@@ -133,7 +132,7 @@ export default class DrawingContext {
 		this.lineWidth(Math.min(DEF_LINE_WID, 0.1*dist));
 		ctx.beginPath();
 		this.moveTo(a);
-		this.lineTo(b.minus(dir.scale(tipSize/2)));
+		this.lineTo(b.minus(dir.scale(tipSize*Trig.cos(Trig.deg(30)))));
 		ctx.stroke();
 
 		const c = b.plus(dir.rot(Trig.deg(150)).scale(tipSize));
@@ -176,6 +175,25 @@ export default class DrawingContext {
 			const line = lines[lines.length - 1 - i];
 			ctx.fillText(line, this.canvas.width/2, this.canvas.height - (space + stride*i));
 		}
+		return this;
+	}
+	text(text, pos, color) {
+		const [ x, y ] = this.__project(pos);
+		const { ctx } = this;
+		ctx.fillStyle = color;
+		ctx.fillText(text, x, y);
+		return this;
+	}
+	fontSize(value) {
+		this.ctx.font = this.__scale(value) + 'px arial';
+		return this;
+	}
+	textAlign(type) {
+		this.ctx.textAlign = type;
+		return this;
+	}
+	textBaseline(type) {
+		this.ctx.textBaseline = type;
 		return this;
 	}
 }

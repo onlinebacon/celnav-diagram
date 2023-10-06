@@ -1,3 +1,7 @@
+export const linear = (t) => {
+	return t;
+};
+
 export const smooth = (t) => {
 	return (1 - Math.cos(t*Math.PI))/2;
 };
