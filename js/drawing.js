@@ -9,29 +9,55 @@ export default class DrawingContext {
 	constructor(canvas) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
+		this.w = 0;
+		this.h = 0;
+		this.cx = 0;
+		this.cy = 0;
+		this.scale = 1;
+		this.bgColor = '#111';
 		this.setDimensions(800, 600);
 	}
+	__updateProjection() {
+		const { h, canvas, cx, cy, scale } = this;
+		const { width, height } = canvas;
+		const s = height/h;
+		this.ax = scale*s;
+		this.ay = - scale*s;
+		this.bx = width/2 - cx*scale*s;
+		this.by = height + (cy*scale - h/2)*s;
+	};
 	setDimensions(width, height) {
 		this.w = width;
 		this.h = height;
+		this.__updateProjection();
+		return this;
+	}
+	canvasSize(width, height) {
+		const { canvas } = this;
+		canvas.width = width;
+		canvas.height = height;
+		this.__updateProjection();
+		return this;
+	}
+	setCenter(x, y) {
+		this.cx = x;
+		this.cy = y;
+		this.__updateProjection();
 		return this;
 	}
 	__project([ x, y ]) {
-		const { w, h, canvas } = this;
-		const { width, height } = canvas;
-		const s = height/h;
-		y = height - y*s;
-		x = (width - w*s)/2 + x*s;
-		return [ x, y ];
+		const { ax, bx, ay, by } = this;
+		return [ x*ax + bx, y*ay + by ];
 	}
 	__scale(val) {
-		const { h, canvas } = this;
+		const { h, canvas, scale } = this;
 		const { height } = canvas;
 		const s = height/h;
-		return s*val;
+		return s*val*scale;
 	}
 	clear() {
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.fillStyle = this.bgColor;
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 		return this;
 	}
 	moveTo(vec) {
@@ -155,12 +181,8 @@ export default class DrawingContext {
 		return this;
 	}
 	coordOf([ x, y ]) {
-		const { w, h, canvas } = this;
-		const { width, height } = canvas;
-		const s = h/height;
-		y = (height - y)*s;
-		x = x*s + (w - width*s)/2;
-		return vec2(x, y);
+		const { ax, bx, ay, by } = this;
+		return vec2((x - bx)/ax, (y - by)/ay);
 	}
 	comment(lines) {
 		const { ctx } = this;
