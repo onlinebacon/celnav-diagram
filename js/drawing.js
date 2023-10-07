@@ -1,7 +1,8 @@
 import * as Trig from './trig.js';
 import { vec2 } from './vec2.js';
 
-const TAU = Math.PI*2;
+const { PI } = Math;
+const TAU = PI*2;
 const DEF_LINE_WID = 1;
 const DEF_SPOT_RAD = DEF_LINE_WID*1.5;
 
@@ -9,51 +10,33 @@ export default class DrawingContext {
 	constructor(canvas) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
-		this.w = 0;
-		this.h = 0;
-		this.cx = 0;
-		this.cy = 0;
-		this.scale = 1;
 		this.bgColor = '#111';
-		this.setDimensions(800, 600);
-	}
-	__updateProjection() {
-		const { h, canvas, cx, cy, scale } = this;
-		const { width, height } = canvas;
-		const s = height/h;
-		this.ax = scale*s;
-		this.ay = - scale*s;
-		this.bx = width/2 - cx*scale*s;
-		this.by = height + (cy*scale - h/2)*s;
-	};
-	setDimensions(width, height) {
-		this.w = width;
-		this.h = height;
-		this.__updateProjection();
-		return this;
+		this.canvasSize(canvas.width, canvas.height);
+		this.setCenter(0, 0);
+		this.scale = 1;
 	}
 	canvasSize(width, height) {
 		const { canvas } = this;
 		canvas.width = width;
 		canvas.height = height;
-		this.__updateProjection();
 		return this;
 	}
 	setCenter(x, y) {
 		this.cx = x;
 		this.cy = y;
-		this.__updateProjection();
 		return this;
 	}
+	unscaled(value) {
+		return value/this.scale;
+	}
 	__project([ x, y ]) {
-		const { ax, bx, ay, by } = this;
-		return [ x*ax + bx, y*ay + by ];
+		const { canvas, cx, cy, scale } = this;
+		x = canvas.width/2 + (x - cx)*scale;
+		y = canvas.height/2 - (y - cy)*scale;
+		return [ x, y ];
 	}
 	__scale(val) {
-		const { h, canvas, scale } = this;
-		const { height } = canvas;
-		const s = height/h;
-		return s*val*scale;
+		return val*this.scale;
 	}
 	clear() {
 		this.ctx.fillStyle = this.bgColor;
@@ -69,7 +52,7 @@ export default class DrawingContext {
 		return this;
 	}
 	lineWidth(val) {
-		this.ctx.lineWidth = this.__scale(val);
+		this.ctx.lineWidth = val;
 		return this;
 	}
 	spot(pos, color = null) {
@@ -176,7 +159,7 @@ export default class DrawingContext {
 		const [ x, y ] = this.__project(center);
 		ctx.strokeStyle = color;
 		ctx.beginPath();
-		ctx.arc(x, y, this.__scale(radius), -Trig.toRad(a), -Trig.toRad(b), true);
+		ctx.arc(x, y, this.__scale(radius), -PI/2 + Trig.toRad(a), -PI/2 + Trig.toRad(b), false);
 		ctx.stroke();
 		return this;
 	}

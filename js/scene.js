@@ -19,12 +19,13 @@ const COLOR = {
 	angle: '#fff',
 };
 
+const earthRadiusMiles = 3958.76;
 const starRadius = 6;
 const lineExcess = 50;
 const arrowLen = 50;
 
 // User vars
-let pxMileRatio = Number((150/3959).toPrecision(3));
+let pxMileRatio = Number((200/earthRadiusMiles).toPrecision(3));
 let obsHeightMiles = 100;
 let starHeightMiles = 2000;
 let obsDir = Trig.deg(15);
@@ -39,15 +40,19 @@ let starHeight = 0;
 let obsVecPos = vec2();
 let starVecPos = vec2();
 let obsVecDir = vec2();
+let obsGPVecPos = vec2();
+let starGPVecPos = vec2();
 
 const recalculateVars = () => {
-	earthRadius = 3959*pxMileRatio;
+	earthRadius = earthRadiusMiles*pxMileRatio;
 	starHeight = starHeightMiles*pxMileRatio;
 	obsHeight = obsHeightMiles*pxMileRatio;
 	const starVecDir = vec2(0, 1).rot(starDir);
 	obsVecDir = vec2(0, 1).rot(obsDir);
 	obsVecPos = obsVecDir.scale(earthRadius + obsHeight);
 	starVecPos = starVecDir.scale(earthRadius + starHeight);
+	obsGPVecPos = obsVecDir.scale(earthRadius);
+	starGPVecPos = starVecDir.scale(earthRadius);
 };
 
 const drawLineWithExcess = (a, b, color) => {
@@ -100,17 +105,33 @@ const drawSextant = () => {
 	const z2VecDir = vec2(0, 1).rot(obsDir + z2Dir);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(arrowLen)), COLOR.z1);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(arrowLen)), COLOR.z2);
-	let angA = Trig.deg(90) - obsDir - z1Dir;
-	let angB = Trig.deg(90) - obsDir - z2Dir;
+	let angA = obsDir + z1Dir;
+	let angB = obsDir + z2Dir;
 	if (z1Dir > z2Dir) {
 		[ angA, angB ] = [ angB, angA ];
 	}
-	const reading = Number(Trig.toDeg(Math.abs(angA - angB)).toFixed(1));
-	ctx.arc(obsVecPos, arrowLen/2, angB, angA, COLOR.angle);
-	const textVecPos = obsVecPos.plus(vec2(1, 0).rot(-(angA + angB)/2).scale(arrowLen/2 + 3));
-	ctx.fontSize(7);
+	const reading = Number(Trig.toDeg(z2Dir - z1Dir).toFixed(1)) + '°';
+	ctx.arc(obsVecPos, arrowLen/2, angA, angB, COLOR.angle);
+	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(arrowLen/2 + 3));
+	ctx.fontSize(10);
 	ctx.textAlign('left').textBaseline('middle');
 	ctx.text(reading, textVecPos, COLOR.angle);
+};
+const drawObserverGP = () => {
+	ctx.spot(obsGPVecPos, COLOR.spot);
+};
+const drawStarGP = () => {
+	ctx.spot(starGPVecPos, COLOR.spot);
+};
+const drawGPDistanceArc = () => {
+	const d360 = Trig.deg(360);
+	let dif = (starDir - obsDir + d360)%d360;
+	ctx.arc(vec2(0, 0), earthRadius, obsDir, obsDir + dif, COLOR.angle);
+	let dist = Trig.toRad(dif)*earthRadiusMiles;
+	let text = Number(dist.toFixed(2)) + ' mi';
+	const midDirVec = vec2(0, 1).rot(obsDir + dif/2);
+	ctx.textAlign('right').textBaseline('middle');
+	ctx.text(text, midDirVec.scale(earthRadius - 10), COLOR.angle);
 };
 
 const render = () => {
@@ -123,10 +144,13 @@ const render = () => {
 	drawUp();
 	drawDown();
 	drawObsStarSight();
+	drawGPDistanceArc();
 	drawSextant();
-	drawObserver();
 	drawStar();
+	drawObserver();
 	drawEarthCenter();
+	drawObserverGP();
+	drawStarGP();
 };
 
 const frameLoop = () => {
@@ -141,7 +165,7 @@ export const init = (drawingContext) => {
 
 Range.build({
 	label: 'Scale',
-	min: 0.03,
+	min: 0.05,
 	max: 40,
 	val: pxMileRatio,
 	ease: Range.exp10,
@@ -155,6 +179,7 @@ Range.build({
 	min: 0,
 	max: 360,
 	val: Number(Trig.toDeg(obsDir).toFixed(1)),
+	parse: (s) => Number(s.repalce(/\s*°\s*$/, '')),
 	round: (val) => Number(val.toFixed(1)),
 	format: (val) => val + '°',
 	onchange: (val) => obsDir = Trig.deg(val),

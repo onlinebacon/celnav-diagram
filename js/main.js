@@ -28,4 +28,12 @@ window.addEventListener('keydown', e => {
 	}
 });
 
+window.addEventListener('wheel', e => {
+	if (e.deltaY > 0) {
+		ctx.scale /= 1.1;
+	} else {
+		ctx.scale *= 1.1;
+	}
+});
+
 Scene.init(ctx);
