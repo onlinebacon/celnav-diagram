@@ -11,9 +11,9 @@ const COLOR = {
 	spot: 'rgb(255, 255, 255)',
 	star: 'rgb(255, 192, 64)',
 	starSight: 'rgba(255, 127, 0, 0.4)',
-	down: 'rgb(0, 255, 127)',
-	up: 'rgb(127, 0, 255)',
-	horizon: 'rgb(110, 110, 110)',
+	down: '#0f7',
+	up: '#70f',
+	horizon: '#666',
 	z1: '#fc5',
 	z2: '#05c',
 	angle: '#fff',
@@ -22,12 +22,12 @@ const COLOR = {
 const earthRadiusMiles = 3958.76;
 const starRadius = 6;
 const lineExcess = 50;
-const arrowLen = 50;
+const arrowLen = 100;
 
 // User vars
-let pxMileRatio = Number((200/earthRadiusMiles).toPrecision(3));
+let pxMileRatio = Number((400/earthRadiusMiles).toPrecision(3));
 let obsHeightMiles = 100;
-let starHeightMiles = 2000;
+let starHeightMiles = 1e6;
 let obsDir = Trig.deg(15);
 let starDir = Trig.deg(50);
 let z1Dir = Trig.deg(30);
@@ -80,7 +80,7 @@ const drawDown = () => {
 };
 const drawUp = () => {
 	const a = obsVecPos;
-	const b = obsVecPos.plus(obsVecDir.scale(50));
+	const b = obsVecPos.plus(obsVecDir.scale(arrowLen));
 	ctx.arrow(a, b, COLOR.up);
 };
 const drawHorizon = () => {
@@ -113,7 +113,7 @@ const drawSextant = () => {
 	const reading = Number(Trig.toDeg(z2Dir - z1Dir).toFixed(1)) + '°';
 	ctx.arc(obsVecPos, arrowLen/2, angA, angB, COLOR.angle);
 	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(arrowLen/2 + 3));
-	ctx.fontSize(10);
+	ctx.fontSize(15);
 	ctx.textAlign('left').textBaseline('middle');
 	ctx.text(reading, textVecPos, COLOR.angle);
 };

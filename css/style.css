@@ -40,6 +40,29 @@ body {
 }
 .var-box {
 	position: fixed;
-	top: 10px;
+	top: 50px;
 	left: 10px;
+}
+.tabs {
+	font-size: 0px;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	height: 40px;
+	background-color: #333;
+}
+.tabs button {
+	height: 24px;
+	margin-top: 8px;
+	margin-left: 8px;
+	background-color: #555;
+	border: none;
+	color: #aaa;
+	border-radius: 3px;
+	cursor: pointer;
+}
+.tabs button.selected {
+	background-color: #ccc;
+	color: #444;
 }

@@ -1,3 +1,5 @@
+import * as DOM from './dom.js';
+
 export const linear = {
 	fromNormal: (normal, min, max) => {
 		return min + normal*(max - min);
@@ -31,31 +33,6 @@ export const exp10 = {
 	},
 };
 
-const create = (
-	tagname = 'div',
-	...args
-) => {
-	const dom = document.createElement(tagname);
-	for (const arg of args) {
-		if (typeof arg === 'string') {
-			dom.setAttribute('class', arg);
-		} else if (arg instanceof Array) {
-			for (const item of arg) {
-				dom.appendChild(item);
-			}
-		} else if (arg instanceof Object) {
-			for (const key in arg) {
-				dom.setAttribute(key, arg[key]);
-			}
-		}
-	}
-	return dom;
-};
-
-const text = (str) => {
-	return document.createTextNode(str);
-};
-
 export const build = ({
 	label = 'Label',
 	min = 0.0,
@@ -67,15 +44,19 @@ export const build = ({
 	parse = s => Number(s),
 	onchange = () => {},
 }) => {
-	const inputText = create('input', { type: 'text' });
-	const inputRange = create('input', {
+	const def = window.localStorage.getItem(label);
+	if (def) {
+		val = Number(def);
+	}
+	const inputText = DOM.create('input', { type: 'text' });
+	const inputRange = DOM.create('input', {
 		type: 'range',
 		min: 0,
 		max: 1,
 		step: 0.001,
 	});
-	const root = create('div', 'var-range', [
-		create('div', 'label', [ text(label + ': ') ]),
+	const root = DOM.create('div', 'var-range', [
+		DOM.create('div', 'label', [ DOM.text(label + ': ') ]),
 		inputText,
 		inputRange,
 	]);
@@ -93,9 +74,13 @@ export const build = ({
 	const setRangeValue = (value) => {
 		inputRange.value = ease.toNormal(value, min, max);
 	};
+	const setStorageValue = (value) => {
+		window.localStorage.setItem(label, value);
+	};
 	inputRange.addEventListener('input', () => {
 		const value = getValueFromRange();
 		setTextValue(value);
+		setStorageValue(value);
 		onchange(value);
 	});
 	inputText.addEventListener('change', () => {
@@ -105,9 +90,13 @@ export const build = ({
 		}
 		setTextValue(value);
 		setRangeValue(value);
+		setStorageValue(value);
 		onchange(value);
 	});
 	setTextValue(val);
 	setRangeValue(val);
+	if (val != null) {
+		onchange(val);
+	}
 	document.querySelector('.var-box').appendChild(root);
 };
