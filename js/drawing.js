@@ -1,38 +1,46 @@
 import * as Trig from './trig.js';
 import { vec2 } from './vec2.js';
 
-const TAU = Math.PI*2;
-const DEF_LINE_WID = 1;
+const { PI } = Math;
+const TAU = PI*2;
+const DEF_LINE_WID = 2;
 const DEF_SPOT_RAD = DEF_LINE_WID*1.5;
 
 export default class DrawingContext {
 	constructor(canvas) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
-		this.setDimensions(800, 600);
-		this.ctx.lineCap = 'round';
+		this.bgColor = '#111';
+		this.canvasSize(canvas.width, canvas.height);
+		this.setCenter(0, 0);
+		this.scale = 1;
 	}
-	setDimensions(width, height) {
-		this.w = width;
-		this.h = height;
+	canvasSize(width, height) {
+		const { canvas } = this;
+		canvas.width = width;
+		canvas.height = height;
 		return this;
 	}
+	setCenter(x, y) {
+		this.cx = x;
+		this.cy = y;
+		return this;
+	}
+	unscaled(value) {
+		return value/this.scale;
+	}
 	__project([ x, y ]) {
-		const { w, h, canvas } = this;
-		const { width, height } = canvas;
-		const s = height/h;
-		y = height - y*s;
-		x = (width - w*s)/2 + x*s;
+		const { canvas, cx, cy, scale } = this;
+		x = canvas.width/2 + (x - cx)*scale;
+		y = canvas.height/2 - (y - cy)*scale;
 		return [ x, y ];
 	}
 	__scale(val) {
-		const { h, canvas } = this;
-		const { height } = canvas;
-		const s = height/h;
-		return s*val;
+		return val*this.scale;
 	}
 	clear() {
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.fillStyle = this.bgColor;
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 		return this;
 	}
 	moveTo(vec) {
@@ -44,7 +52,7 @@ export default class DrawingContext {
 		return this;
 	}
 	lineWidth(val) {
-		this.ctx.lineWidth = this.__scale(val);
+		this.ctx.lineWidth = val;
 		return this;
 	}
 	spot(pos, color = null) {
@@ -127,13 +135,13 @@ export default class DrawingContext {
 
 		const dif = b.minus(a);
 		const dist = dif.len();
-		const tipSize = Math.min(dist*0.3, 8);
+		const tipSize = Math.min(dist*0.3, DEF_LINE_WID*8);
 		const dir = dif.normalized();
 
 		this.lineWidth(Math.min(DEF_LINE_WID, 0.1*dist));
 		ctx.beginPath();
 		this.moveTo(a);
-		this.lineTo(b.minus(dir.scale(tipSize/2)));
+		this.lineTo(b.minus(dir.scale(tipSize*Trig.cos(Trig.deg(30)))));
 		ctx.stroke();
 
 		const c = b.plus(dir.rot(Trig.deg(150)).scale(tipSize));
@@ -151,17 +159,13 @@ export default class DrawingContext {
 		const [ x, y ] = this.__project(center);
 		ctx.strokeStyle = color;
 		ctx.beginPath();
-		ctx.arc(x, y, this.__scale(radius), -Trig.toRad(a), -Trig.toRad(b), true);
+		ctx.arc(x, y, this.__scale(radius), -PI/2 + Trig.toRad(a), -PI/2 + Trig.toRad(b), false);
 		ctx.stroke();
 		return this;
 	}
 	coordOf([ x, y ]) {
-		const { w, h, canvas } = this;
-		const { width, height } = canvas;
-		const s = h/height;
-		y = (height - y)*s;
-		x = x*s + (w - width*s)/2;
-		return vec2(x, y);
+		const { ax, bx, ay, by } = this;
+		return vec2((x - bx)/ax, (y - by)/ay);
 	}
 	comment(lines) {
 		const { ctx } = this;
@@ -176,6 +180,25 @@ export default class DrawingContext {
 			const line = lines[lines.length - 1 - i];
 			ctx.fillText(line, this.canvas.width/2, this.canvas.height - (space + stride*i));
 		}
+		return this;
+	}
+	text(text, pos, color) {
+		const [ x, y ] = this.__project(pos);
+		const { ctx } = this;
+		ctx.fillStyle = color;
+		ctx.fillText(text, x, y);
+		return this;
+	}
+	fontSize(value) {
+		this.ctx.font = this.__scale(value) + 'px arial';
+		return this;
+	}
+	textAlign(type) {
+		this.ctx.textAlign = type;
+		return this;
+	}
+	textBaseline(type) {
+		this.ctx.textBaseline = type;
 		return this;
 	}
 }
