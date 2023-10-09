@@ -30,25 +30,8 @@ window.addEventListener('keydown', e => {
 	}
 });
 
-Tabs.add({
-	label: 'Toggles',
-	selected: true,
-	onselect: () => {
-		document.querySelector('.toggles').style.display = 'block';
-	},
-	onunselect: () => {
-		document.querySelector('.toggles').style.display = 'none';
-	},
-});
-Tabs.add({
-	label: 'Variables',
-	onselect: () => {
-		document.querySelector('.variables').style.display = 'block';
-	},
-	onunselect: () => {
-		document.querySelector('.variables').style.display = 'none';
-	},
-});
+Tabs.add('Toggles', '.toggles');
+Tabs.add('Variables', '.variables');
 
 Toggles.create('Earth', 'earth', true);
 Toggles.create('Observer', 'observer', false);

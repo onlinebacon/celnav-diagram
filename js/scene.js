@@ -2,6 +2,9 @@ import DrawingContext from './drawing.js';
 import * as Trig from './trig.js';
 import * as Toggles from './toggles.js';
 import { vec2 } from './vec2.js';
+import * as Vars from './variables.js';
+
+const { VARS } = Vars;
 
 let ctx = true ? null : new DrawingContext(null);
 
@@ -20,15 +23,12 @@ const COLOR = {
 };
 
 const earthRadiusMiles = 3958.76;
-const starRadius = 6;
+const starRadius = 10;
 const lineExcess = 50;
 const arrowLen = 100;
 
 // User vars
-let pxMileRatio = Number((400/earthRadiusMiles).toPrecision(3));
 let obsHeightMiles = 100;
-let starHeightMiles = 1e6;
-let obsDir = Trig.deg(15);
 let starDir = Trig.deg(50);
 let z1Dir = Trig.deg(30);
 let z2Dir = Trig.deg(60);
@@ -44,11 +44,11 @@ let obsGPVecPos = vec2();
 let starGPVecPos = vec2();
 
 const recalculateVars = () => {
-	earthRadius = earthRadiusMiles*pxMileRatio;
-	starHeight = starHeightMiles*pxMileRatio;
-	obsHeight = obsHeightMiles*pxMileRatio;
+	earthRadius = earthRadiusMiles*VARS.scale;
+	starHeight = VARS.star_height*VARS.scale;
+	obsHeight = obsHeightMiles*VARS.scale;
 	const starVecDir = vec2(0, 1).rot(starDir);
-	obsVecDir = vec2(0, 1).rot(obsDir);
+	obsVecDir = vec2(0, 1).rot(VARS.obsDir);
 	obsVecPos = obsVecDir.scale(earthRadius + obsHeight);
 	starVecPos = starVecDir.scale(earthRadius + starHeight);
 	obsGPVecPos = obsVecDir.scale(earthRadius);
@@ -83,11 +83,12 @@ const drawUp = () => {
 	const b = obsVecPos.plus(obsVecDir.scale(arrowLen));
 	ctx.arrow(a, b, COLOR.up);
 };
+
 const drawHorizon = () => {
 	const hip = earthRadius + obsHeight;
 	const adj = earthRadius;
 	const dip = Trig.acos(adj/hip);
-	const hrzVecDir = vec2(1, 0).rot(obsDir + dip);
+	const hrzVecDir = vec2(1, 0).rot(VARS.obsDir + dip);
 	const hrzDist = (hip**2 - adj**2)**0.5;
 	const hrzVecPos = obsVecPos.plus(hrzVecDir.scale(hrzDist));
 	const a = obsVecPos.minus(hrzVecDir.scale(lineExcess));
@@ -101,12 +102,12 @@ const drawEarthCenterStarLine = () => drawLineWithExcess(
 	COLOR.starSight,
 );
 const drawSextant = () => {
-	const z1VecDir = vec2(0, 1).rot(obsDir + z1Dir);
-	const z2VecDir = vec2(0, 1).rot(obsDir + z2Dir);
+	const z1VecDir = vec2(0, 1).rot(VARS.obsDir + z1Dir);
+	const z2VecDir = vec2(0, 1).rot(VARS.obsDir + z2Dir);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(arrowLen)), COLOR.z1);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(arrowLen)), COLOR.z2);
-	let angA = obsDir + z1Dir;
-	let angB = obsDir + z2Dir;
+	let angA = VARS.obsDir + z1Dir;
+	let angB = VARS.obsDir + z2Dir;
 	if (z1Dir > z2Dir) {
 		[ angA, angB ] = [ angB, angA ];
 	}
@@ -125,11 +126,11 @@ const drawStarGP = () => {
 };
 const drawGPDistanceArc = () => {
 	const d360 = Trig.deg(360);
-	let dif = (starDir - obsDir + d360)%d360;
-	ctx.arc(vec2(0, 0), earthRadius, obsDir, obsDir + dif, COLOR.angle);
+	let dif = (starDir - VARS.obsDir + d360)%d360;
+	ctx.arc(vec2(0, 0), earthRadius, VARS.obsDir, VARS.obsDir + dif, COLOR.angle);
 	let dist = Trig.toRad(dif)*earthRadiusMiles;
 	let text = Number(dist.toFixed(2)) + ' mi';
-	const midDirVec = vec2(0, 1).rot(obsDir + dif/2);
+	const midDirVec = vec2(0, 1).rot(VARS.obsDir + dif/2);
 	ctx.textAlign('right').textBaseline('middle');
 	ctx.text(text, midDirVec.scale(earthRadius - 10), COLOR.angle);
 };
@@ -166,7 +167,7 @@ const render = () => {
 	if (Toggles.get('sextant')) {
 		drawSextant();
 	}
-	if (Toggles.get('drawStar')) {
+	if (Toggles.get('star')) {
 		drawStar();
 	}
 	if (Toggles.get('observer')) {
@@ -193,27 +194,30 @@ export const init = (drawingContext) => {
 	frameLoop();
 };
 
-// Range.build({
-// 	label: 'Scale',
-// 	min: 0.05,
-// 	max: 40,
-// 	val: pxMileRatio,
-// 	ease: Range.exp10,
-// 	round: (val) => Number(val.toPrecision(3)),
-// 	format: (val) => val + ' px/mi',
-// 	onchange: (val) => pxMileRatio = val,
-// });
+Vars.add({
+	label: 'Scale',
+	name: 'scale',
+	min: 0.0001,
+	max: 40,
+	init: Number((400/earthRadiusMiles).toPrecision(3)),
+	ease: Vars.exp10,
+	round: (val) => Number(val.toPrecision(3)),
+	parse: (str) => str.replace(/px\/mi\s*$/i, ''),
+	format: (val) => val + ' px/mi',
+});
 
-// Range.build({
-// 	label: 'Observer position',
-// 	min: 0,
-// 	max: 360,
-// 	val: Number(Trig.toDeg(obsDir).toFixed(1)),
-// 	parse: (s) => Number(s.repalce(/\s*°\s*$/, '')),
-// 	round: (val) => Number(val.toFixed(1)),
-// 	format: (val) => val + '°',
-// 	onchange: (val) => obsDir = Trig.deg(val),
-// });
+Vars.add({
+	label: 'Observer position',
+	name: 'obsDir',
+	min: 0,
+	max: 360,
+	init: 15,
+	round: (val) => Number(val.toFixed(1)),
+	parse: (s) => Number(s.repalce(/\s*°\s*$/, '')),
+	format: (val) => val + '°',
+	map: (deg) => Trig.deg(deg),
+	unmap: (angle) => Trig.toDeg(angle),
+});
 
 // Range.build({
 // 	label: 'Observer height',
@@ -236,16 +240,16 @@ export const init = (drawingContext) => {
 // 	onchange: (val) => starDir = Trig.deg(val),
 // });
 
-// Range.build({
-// 	label: 'Star height',
-// 	min: 0,
-// 	val: starHeightMiles,
-// 	max: 1e6,
-// 	ease: Range.quadratic,
-// 	round: (val) => Number(val.toPrecision(3)),
-// 	format: (val) => val + ' mi',
-// 	onchange: (val) => starHeightMiles = val,
-// });
+Vars.add({
+	label: 'Star height',
+	name: 'star_height',
+	init: 4000,
+	min: 0,
+	max: 1e6,
+	ease: Vars.quadratic,
+	round: (val) => Number(val.toPrecision(3)),
+	format: (val) => val + ' mi',
+});
 
 // Range.build({
 // 	label: 'Sextant. Z1',

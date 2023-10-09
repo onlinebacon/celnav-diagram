@@ -4,13 +4,12 @@ body {
 	overflow: hidden;
 	margin: 0px;
 }
-.toggles,
-.variables {
+.tab-content {
 	position: fixed;
 	top: 50px;
 	left: 10px;
 }
-.var-range {
+/* .var-range {
 	transition: opacity 0.25s;
 	opacity: 0.2;
 	background-color: #333;
@@ -43,7 +42,7 @@ body {
 }
 .var-range input[type="range"] {
 	width: 512px;
-}
+} */
 .tabs {
 	font-size: 0px;
 	position: fixed;
@@ -67,7 +66,7 @@ body {
 	background-color: #ccc;
 	color: #444;
 }
-.toggles button {
+.tab-content button {
 	border: none;
 	height: 24px;
 	border-radius: 3px;
@@ -79,13 +78,49 @@ body {
 	opacity: 0.5;
 	transition: 0.25s;
 }
-.toggles button:hover {
+.tab-content button:hover {
 	opacity: 1;
 }
-.toggles button:not(:nth-child(1)) {
+.tab-content button:not(:nth-child(1)) {
 	margin-top: 5px;
 }
-.toggles button.on {
+.tab-content button.on,
+.tab-content button.selected {
 	background-color: #ccc;
 	color: #333;
+}
+.range {
+	position: fixed;
+	left: 0px;
+	bottom: 0px;
+	right: 0px;
+	text-align: center;
+}
+.range-block {
+	background-color: #333;
+	padding-left: 2px;
+	padding-right: 7px;
+	display: inline-block;
+	margin-bottom: 10px;
+}
+.range-block > * {
+	vertical-align: middle;
+	margin: 5px 0px 5px 5px;
+}
+.range-block .label {
+	color: #fff;
+	font-size: 12px;
+	margin-bottom: 3px,;
+	display: inline-block;
+	text-align: left;
+}
+.range-block input[type="text"] {
+	font-family: monospace;
+	color: #ccc;
+	background-color: #222;
+	border: none;
+	width: 120px;
+}
+.range-block input[type="range"] {
+	width: 512px;
 }
