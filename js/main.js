@@ -23,13 +23,6 @@ fillScreenWithCanvas();
 
 window.addEventListener('resize', fillScreenWithCanvas);
 
-window.addEventListener('keydown', e => {
-	if (e.code === 'KeyF') {
-		full_screen = !full_screen;
-		fillScreenWithCanvas();
-	}
-});
-
 Tabs.add('Toggles', '.toggles', true);
 Tabs.add('Variables', '.variables');
 Tabs.add('Actions', '.actions');

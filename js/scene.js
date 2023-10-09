@@ -5,6 +5,7 @@ import { vec2 } from './vec2.js';
 import * as Vars from './variables.js';
 import * as Actions from './actions.js';
 import * as Animation from './animation.js';
+import * as Miles from './miles.js';
 import { smooth } from './ease.js';
 
 const { VARS } = Vars;
@@ -178,7 +179,7 @@ Vars.add({
 	label: 'Scale',
 	name: 'scale',
 	min: 0.0001,
-	max: 40,
+	max: 150,
 	init: Number((250/earthRadiusMiles).toPrecision(3)),
 	ease: Vars.exp10,
 	round: (val) => Number(val.toPrecision(3)),
@@ -206,8 +207,8 @@ Vars.add({
 	max: 500,
 	ease: Vars.quadratic,
 	round: (val) => Number(val.toPrecision(3)),
-	parse: (str) => Number(str.replace(/\s*mi\s*$/i, '')),
-	format: (val) => val + ' mi',
+	parse: (str) => Miles.parse(str),
+	format: (val) => Miles.stringify(val),
 });
 
 Vars.add({
@@ -230,7 +231,8 @@ Vars.add({
 	max: 1e6,
 	ease: Vars.quadratic,
 	round: (val) => Number(val.toPrecision(3)),
-	format: (val) => val + ' mi',
+	parse: (str) => Miles.parse(str),
+	format: (val) => Miles.stringify(val),
 });
 
 Vars.add({
@@ -263,8 +265,8 @@ Vars.add({
 	label: 'Arrow length',
 	name: 'arrow_len',
 	init: 100,
-	min: 10,
-	max: 300,
+	min: 50,
+	max: 400,
 	ease: Vars.linear,
 	parse: (str) => Number(str.replace(/\s*px\s*$/, '')),
 	format: (val) => val + 'px',
