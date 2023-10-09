@@ -30,7 +30,7 @@ window.addEventListener('keydown', e => {
 	}
 });
 
-Tabs.add('Toggles', '.toggles');
+Tabs.add('Toggles', '.toggles', true);
 Tabs.add('Variables', '.variables');
 
 Toggles.create('Earth', 'earth', true);
@@ -39,9 +39,9 @@ Toggles.create('Plumb', 'down', false);
 Toggles.create('Zenith', 'up', false);
 Toggles.create('GP', 'gp', false);
 Toggles.create('Star', 'star', false);
-Toggles.create('Star GP', 'star_gp', false);
 Toggles.create('Star Sight', 'star_sight', false);
 Toggles.create('Star GP sight', 'star_gp_sight', false);
+Toggles.create('Star GP', 'star_gp', false);
 Toggles.create('Horizon', 'hrz', false);
 Toggles.create('Sextant', 'sextant', false);
 Toggles.create('GP distance', 'arc', false);

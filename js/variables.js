@@ -73,74 +73,6 @@ inputText.addEventListener('change', () => {
 	inputRange.value = normal;
 });
 
-// export const add = ({
-// 	label = 'Label',
-// 	min = 0.0,
-// 	val = 0.5,
-// 	max = 1.0,
-// 	ease = linear,
-// 	round = x => Number(x.toFixed(2)),
-// 	format = x => x.toString(),
-// 	parse = s => Number(s),
-// 	onchange = () => {},
-// }) => {
-// 	const def = window.localStorage.getItem(label);
-// 	if (def) {
-// 		val = Number(def);
-// 	}
-// 	const inputText = DOM.create('input', { type: 'text' });
-// 	const inputRange = DOM.create('input', {
-// 		type: 'range',
-// 		min: 0,
-// 		max: 1,
-// 		step: 0.001,
-// 	});
-// 	const root = DOM.create('div', 'var-range', [
-// 		DOM.create('div', 'label', [ DOM.text(label + ': ') ]),
-// 		inputText,
-// 		inputRange,
-// 	]);
-// 	const getValueFromRange = () => {
-// 		const normal = Number(inputRange.value);
-// 		const value = round(ease.fromNormal(normal, min, max));
-// 		return value;
-// 	};
-// 	const getValueFromText = () => {
-// 		return parse(inputText.value);
-// 	};
-// 	const setTextValue = (value) => {
-// 		inputText.value = format(value);
-// 	};
-// 	const setRangeValue = (value) => {
-// 		inputRange.value = ease.toNormal(value, min, max);
-// 	};
-// 	const setStorageValue = (value) => {
-// 		window.localStorage.setItem(label, value);
-// 	};
-// 	inputRange.addEventListener('input', () => {
-// 		const value = getValueFromRange();
-// 		setTextValue(value);
-// 		setStorageValue(value);
-// 		onchange(value);
-// 	});
-// 	inputText.addEventListener('change', () => {
-// 		const value = getValueFromText();
-// 		if (isNaN(value)) {
-// 			return;
-// 		}
-// 		setTextValue(value);
-// 		setRangeValue(value);
-// 		setStorageValue(value);
-// 		onchange(value);
-// 	});
-// 	setTextValue(val);
-// 	setRangeValue(val);
-// 	if (val != null) {
-// 		onchange(val);
-// 	}
-// 	document.querySelector('.variables').appendChild(root);
-// };
-
 export const add = ({
 	label,
 	name,
@@ -152,7 +84,6 @@ export const add = ({
 	format = (value) => value.toString(),
 	parse = (s) => Number(s),
 	map = (value) => value,
-	unmap = (value) => value,
 }) => {
 	const button = DOM.create('button', [ DOM.text(label) ]);
 	document.querySelector('.variables').appendChild(button);

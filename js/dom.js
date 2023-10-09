@@ -48,3 +48,9 @@ export const addClass = (dom, name) => {
 	dom.setAttribute('class', arr.join(' '));
 	return true;
 };
+
+export const hasClass = (dom, name) => {
+	const classes = dom.getAttribute('class')?.trim() ?? '';
+	const arr = (classes !== '') ? classes.split(/\s+/) : [];
+	return arr.includes(name);
+};

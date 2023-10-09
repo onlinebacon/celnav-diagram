@@ -27,12 +27,6 @@ const starRadius = 10;
 const lineExcess = 50;
 const arrowLen = 100;
 
-// User vars
-let obsHeightMiles = 100;
-let starDir = Trig.deg(50);
-let z1Dir = Trig.deg(30);
-let z2Dir = Trig.deg(60);
-
 // Calculated vars
 let obsHeight = 0;
 let earthRadius = 0;
@@ -46,22 +40,20 @@ let starGPVecPos = vec2();
 const recalculateVars = () => {
 	earthRadius = earthRadiusMiles*VARS.scale;
 	starHeight = VARS.star_height*VARS.scale;
-	obsHeight = obsHeightMiles*VARS.scale;
-	const starVecDir = vec2(0, 1).rot(starDir);
-	obsVecDir = vec2(0, 1).rot(VARS.obsDir);
+	obsHeight = VARS.obs_height*VARS.scale;
+	const starVecDir = vec2(0, 1).rot(VARS.star_dir);
+	obsVecDir = vec2(0, 1).rot(VARS.obs_dir);
 	obsVecPos = obsVecDir.scale(earthRadius + obsHeight);
 	starVecPos = starVecDir.scale(earthRadius + starHeight);
 	obsGPVecPos = obsVecDir.scale(earthRadius);
 	starGPVecPos = starVecDir.scale(earthRadius);
 };
-
 const drawLineWithExcess = (a, b, color) => {
 	const excess = b.minus(a).normalized().scale(lineExcess);
 	a = a.minus(excess);
 	b = b.plus(excess);
 	ctx.line(a, b, color);
 };
-
 const drawEarth = () => {
 	ctx.circle([ 0, 0 ], earthRadius, COLOR.earth, COLOR.earthInterior);
 };
@@ -83,12 +75,11 @@ const drawUp = () => {
 	const b = obsVecPos.plus(obsVecDir.scale(arrowLen));
 	ctx.arrow(a, b, COLOR.up);
 };
-
 const drawHorizon = () => {
 	const hip = earthRadius + obsHeight;
 	const adj = earthRadius;
 	const dip = Trig.acos(adj/hip);
-	const hrzVecDir = vec2(1, 0).rot(VARS.obsDir + dip);
+	const hrzVecDir = vec2(1, 0).rot(VARS.obs_dir + dip);
 	const hrzDist = (hip**2 - adj**2)**0.5;
 	const hrzVecPos = obsVecPos.plus(hrzVecDir.scale(hrzDist));
 	const a = obsVecPos.minus(hrzVecDir.scale(lineExcess));
@@ -102,16 +93,16 @@ const drawEarthCenterStarLine = () => drawLineWithExcess(
 	COLOR.starSight,
 );
 const drawSextant = () => {
-	const z1VecDir = vec2(0, 1).rot(VARS.obsDir + z1Dir);
-	const z2VecDir = vec2(0, 1).rot(VARS.obsDir + z2Dir);
+	const z1VecDir = vec2(0, 1).rot(VARS.obs_dir + VARS.sxt_idx_dir);
+	const z2VecDir = vec2(0, 1).rot(VARS.obs_dir + VARS.sxt_hrz_dir);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(arrowLen)), COLOR.z1);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(arrowLen)), COLOR.z2);
-	let angA = VARS.obsDir + z1Dir;
-	let angB = VARS.obsDir + z2Dir;
-	if (z1Dir > z2Dir) {
+	let angA = VARS.obs_dir + VARS.sxt_idx_dir;
+	let angB = VARS.obs_dir + VARS.sxt_hrz_dir;
+	if (VARS.sxt_idx_dir > VARS.sxt_hrz_dir) {
 		[ angA, angB ] = [ angB, angA ];
 	}
-	const reading = Number(Trig.toDeg(z2Dir - z1Dir).toFixed(1)) + '°';
+	const reading = Number(Trig.toDeg(VARS.sxt_hrz_dir - VARS.sxt_idx_dir).toFixed(1)) + '°';
 	ctx.arc(obsVecPos, arrowLen/2, angA, angB, COLOR.angle);
 	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(arrowLen/2 + 3));
 	ctx.fontSize(15);
@@ -126,11 +117,11 @@ const drawStarGP = () => {
 };
 const drawGPDistanceArc = () => {
 	const d360 = Trig.deg(360);
-	let dif = (starDir - VARS.obsDir + d360)%d360;
-	ctx.arc(vec2(0, 0), earthRadius, VARS.obsDir, VARS.obsDir + dif, COLOR.angle);
+	let dif = (VARS.star_dir - VARS.obs_dir + d360)%d360;
+	ctx.arc(vec2(0, 0), earthRadius, VARS.obs_dir, VARS.obs_dir + dif, COLOR.angle);
 	let dist = Trig.toRad(dif)*earthRadiusMiles;
 	let text = Number(dist.toFixed(2)) + ' mi';
-	const midDirVec = vec2(0, 1).rot(VARS.obsDir + dif/2);
+	const midDirVec = vec2(0, 1).rot(VARS.obs_dir + dif/2);
 	ctx.textAlign('right').textBaseline('middle');
 	ctx.text(text, midDirVec.scale(earthRadius - 10), COLOR.angle);
 };
@@ -143,45 +134,19 @@ const render = () => {
 	} else {
 		ctx.setCenter(0, 0);
 	}
-	if (Toggles.get('earth')) {
-		drawEarth();
-	}
-	if (Toggles.get('star_gp_sight')) {
-		drawEarthCenterStarLine();
-	}
-	if (Toggles.get('hrz')) {
-		drawHorizon();
-	}
-	if (Toggles.get('down')) {
-		drawDown();
-	}
-	if (Toggles.get('up')) {
-		drawUp();
-	}
-	if (Toggles.get('star_sight')) {
-		drawObsStarSight();
-	}
-	if (Toggles.get('arc')) {
-		drawGPDistanceArc();
-	}
-	if (Toggles.get('sextant')) {
-		drawSextant();
-	}
-	if (Toggles.get('star')) {
-		drawStar();
-	}
-	if (Toggles.get('observer')) {
-		drawObserver();
-	}
-	if (Toggles.get('earth')) {
-		drawEarthCenter();
-	}
-	if (Toggles.get('gp')) {
-		drawObserverGP();
-	}
-	if (Toggles.get('star_gp')) {
-		drawStarGP();
-	}
+	if (Toggles.get('earth')) drawEarth();
+	if (Toggles.get('star_gp_sight')) drawEarthCenterStarLine();
+	if (Toggles.get('hrz')) drawHorizon();
+	if (Toggles.get('down')) drawDown();
+	if (Toggles.get('up')) drawUp();
+	if (Toggles.get('star_sight')) drawObsStarSight();
+	if (Toggles.get('arc')) drawGPDistanceArc();
+	if (Toggles.get('sextant')) drawSextant();
+	if (Toggles.get('star')) drawStar();
+	if (Toggles.get('observer')) drawObserver();
+	if (Toggles.get('earth')) drawEarthCenter();
+	if (Toggles.get('gp')) drawObserverGP();
+	if (Toggles.get('star_gp')) drawStarGP();
 };
 
 const frameLoop = () => {
@@ -199,7 +164,7 @@ Vars.add({
 	name: 'scale',
 	min: 0.0001,
 	max: 40,
-	init: Number((400/earthRadiusMiles).toPrecision(3)),
+	init: Number((250/earthRadiusMiles).toPrecision(3)),
 	ease: Vars.exp10,
 	round: (val) => Number(val.toPrecision(3)),
 	parse: (str) => str.replace(/px\/mi\s*$/i, ''),
@@ -208,37 +173,39 @@ Vars.add({
 
 Vars.add({
 	label: 'Observer position',
-	name: 'obsDir',
+	name: 'obs_dir',
 	min: 0,
 	max: 360,
-	init: 15,
+	init: 0,
 	round: (val) => Number(val.toFixed(1)),
 	parse: (s) => Number(s.repalce(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
-	unmap: (angle) => Trig.toDeg(angle),
 });
 
-// Range.build({
-// 	label: 'Observer height',
-// 	min: 0,
-// 	val: obsHeightMiles,
-// 	max: 500,
-// 	ease: Range.quadratic,
-// 	round: (val) => Number(val.toPrecision(3)),
-// 	format: (val) => val + ' mi',
-// 	onchange: (val) => obsHeightMiles = val,
-// });
+Vars.add({
+	label: 'Observer height',
+	name: 'obs_height',
+	init: 150,
+	min: 0,
+	max: 500,
+	ease: Vars.quadratic,
+	round: (val) => Number(val.toPrecision(3)),
+	parse: (str) => Number(str.replace(/\s*mi\s*$/i, '')),
+	format: (val) => val + ' mi',
+});
 
-// Range.build({
-// 	label: 'Star position',
-// 	min: 0,
-// 	max: 360,
-// 	val: Number(Trig.toDeg(starDir).toFixed(1)),
-// 	round: (val) => Number(val.toFixed(1)),
-// 	format: (val) => val + '°',
-// 	onchange: (val) => starDir = Trig.deg(val),
-// });
+Vars.add({
+	label: 'Star position',
+	name: 'star_dir',
+	init: 50,
+	min: 0,
+	max: 360,
+	round: (val) => Number(val.toFixed(1)),
+	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
+	format: (val) => val + '°',
+	map: (deg) => Trig.deg(deg),
+});
 
 Vars.add({
 	label: 'Star height',
@@ -251,24 +218,28 @@ Vars.add({
 	format: (val) => val + ' mi',
 });
 
-// Range.build({
-// 	label: 'Sextant. Z1',
-// 	min: 0,
-// 	val: Math.round(Trig.toDeg(z1Dir)),
-// 	max: 180,
-// 	ease: Range.linear,
-// 	round: (val) => Number(val.toFixed(1)),
-// 	format: (val) => val + '°',
-// 	onchange: (val) => z1Dir = Trig.deg(val),
-// });
+Vars.add({
+	label: 'Sext. Index',
+	name: 'sxt_idx_dir',
+	init: 30,
+	min: 0,
+	max: 180,
+	ease: Vars.linear,
+	round: (val) => Number(val.toFixed(1)),
+	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
+	format: (val) => val + '°',
+	map: (deg) => Trig.deg(deg),
+});
 
-// Range.build({
-// 	label: 'Sextant. Z2',
-// 	min: 0,
-// 	val: Math.round(Trig.toDeg(z2Dir)),
-// 	max: 180,
-// 	ease: Range.linear,
-// 	round: (val) => Number(val.toFixed(1)),
-// 	format: (val) => val + '°',
-// 	onchange: (val) => z2Dir = Trig.deg(val),
-// });
+Vars.add({
+	label: 'Sext. Hrz.',
+	name: 'sxt_hrz_dir',
+	init: 60,
+	min: 0,
+	max: 180,
+	ease: Vars.linear,
+	round: (val) => Number(val.toFixed(1)),
+	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
+	format: (val) => val + '°',
+	map: (deg) => Trig.deg(deg),
+});
