@@ -9,40 +9,6 @@ body {
 	top: 50px;
 	left: 10px;
 }
-/* .var-range {
-	transition: opacity 0.25s;
-	opacity: 0.2;
-	background-color: #333;
-	padding-left: 2px;
-	padding-right: 7px;
-}
-.var-range:hover {
-	opacity: 1;
-}
-.var-range:not(:nth-child(1)) {
-	margin-top: 10px;
-}
-.var-range > * {
-	vertical-align: middle;
-	margin: 5px 0px 5px 5px;
-}
-.var-range .label {
-	width: 120px;
-	color: #fff;
-	font-size: 12px;
-	margin-bottom: 3px,;
-	display: inline-block;
-}
-.var-range input[type="text"] {
-	font-family: monospace;
-	color: #ccc;
-	background-color: #222;
-	border: none;
-	width: 120px;
-}
-.var-range input[type="range"] {
-	width: 512px;
-} */
 .tabs {
 	font-size: 0px;
 	position: fixed;
@@ -123,4 +89,7 @@ body {
 }
 .range-block input[type="range"] {
 	width: 512px;
+}
+.hidden {
+	display: none;
 }

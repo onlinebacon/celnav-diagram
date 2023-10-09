@@ -9,26 +9,26 @@ export const add = (label, selector, selected = false) => {
 	document.querySelector('.tabs').appendChild(button);
 	if (selected) {
 		DOM.addClass(button, 'selected');
-		dom.style.display = 'block';
+		DOM.removeClass(dom, 'hidden');
 	} else {
-		dom.style.display = 'none';
+		DOM.addClass(dom, 'hidden');
 	}
 	tabs.push(tab);
 	button.addEventListener('click', () => {
 		if (tab.selected) {
 			tab.selected = false;
 			DOM.removeClass(button, 'selected');
-			dom.style.display = 'none';
+			DOM.addClass(dom, 'hidden');
 		} else {
 			const item = tabs.find(item => item.selected);
 			if (item) {
 				item.selected = false;
 				DOM.removeClass(item.button, 'selected');
-				item.dom.style.display = 'none';
+				DOM.addClass(item.dom, 'hidden');
 			}
 			tab.selected = true;
 			DOM.addClass(button, 'selected');
-			dom.style.display = 'block';
+			DOM.removeClass(dom, 'hidden');
 		}
 	});
 };

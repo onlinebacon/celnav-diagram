@@ -1,4 +1,5 @@
 import DrawingContext from './drawing.js';
+import * as DOM from './dom.js';
 import * as Scene from './scene.js';
 import * as Tabs from './tabs.js';
 import * as Toggles from './toggles.js';
@@ -39,5 +40,26 @@ Toggles.create('Star GP', 'star_gp', false);
 Toggles.create('Horizon', 'hrz', false);
 Toggles.create('Sextant', 'sextant', false);
 Toggles.create('GP distance', 'arc', false);
+Toggles.create('Horizontal', 'horizontal', false);
 
 Scene.init(ctx);
+
+window.addEventListener('keydown', e => {
+	const { code } = e;
+	if (code.startsWith('Digit')) {
+		const digit = code.replace('Digit', '');
+		const index = digit === '0' ? 9 : digit - 1;
+		const e = document.querySelectorAll('.tabs button')[index];
+		if (e && !DOM.hasClass(e, 'selected')) {
+			e.click();
+		}
+	}
+	if (code.startsWith('Numpad')) {
+		const digit = code.replace('Numpad', '');
+		const index = digit === '0' ? 9 : digit - 1;
+		const e = document.querySelectorAll('.tab-content:not(.hidden) button')[index];
+		if (e && !DOM.hasClass(e, 'selected')) {
+			e.click();
+		}
+	}
+});

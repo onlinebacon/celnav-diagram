@@ -24,11 +24,13 @@ const COLOR = {
 	z1: '#fc5',
 	z2: '#05c',
 	angle: '#fff',
+	horizontal: '#c52',
 };
 
 const earthRadiusMiles = 3958.76;
 const starRadius = 10;
 const lineExcess = 50;
+const horizontalLen = 300;
 
 // Calculated vars
 let obsHeight = 0;
@@ -145,6 +147,12 @@ const drawGPDistanceArc = () => {
 	ctx.textAlign('right').textBaseline('middle');
 	ctx.text(text, midDirVec.scale(earthRadius - 10), COLOR.angle);
 };
+const drawHorizontal = () => {
+	const dif = vec2(horizontalLen/2, 0).rot(VARS.obs_dir);
+	const a = obsVecPos.plus(dif);
+	const b = obsVecPos.minus(dif);
+	ctx.line(a, b, COLOR.horizontal);
+};
 
 const render = () => {
 	ctx.clear();
@@ -163,6 +171,7 @@ const render = () => {
 	if (Toggles.get('earth')) drawEarthCenter();
 	if (Toggles.get('gp')) drawObserverGP();
 	if (Toggles.get('star_gp')) drawStarGP();
+	if (Toggles.get('horizontal')) drawHorizontal();
 };
 
 const frameLoop = () => {
@@ -179,7 +188,7 @@ Vars.add({
 	label: 'Scale',
 	name: 'scale',
 	min: 0.0001,
-	max: 100,
+	max: 150,
 	init: Number((250/earthRadiusMiles).toPrecision(3)),
 	ease: Vars.exp10,
 	round: (val) => Number(val.toPrecision(3)),
