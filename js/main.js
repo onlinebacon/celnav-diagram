@@ -29,24 +29,25 @@ Tabs.add('Variables', '.variables');
 Tabs.add('Actions', '.actions');
 
 Toggles.create('Earth', 'earth', true);
-Toggles.create('Observer', 'observer', false);
-Toggles.create('Plumb', 'down', false);
-Toggles.create('Zenith', 'up', false);
-Toggles.create('GP', 'gp', false);
-Toggles.create('Star', 'star', false);
-Toggles.create('Star Sight', 'star_sight', false);
-Toggles.create('Star GP sight', 'star_gp_sight', false);
-Toggles.create('Star GP', 'star_gp', false);
-Toggles.create('Horizon', 'hrz', false);
-Toggles.create('Sextant', 'sextant', false);
-Toggles.create('GP distance', 'arc', false);
-Toggles.create('Horizontal', 'horizontal', false);
+Toggles.create('Observer', 'observer', true);
+Toggles.create('Plumb', 'down', true);
+Toggles.create('Zenith', 'up', true);
+Toggles.create('GP', 'gp', true);
+Toggles.create('Star', 'star', true);
+Toggles.create('Star Sight', 'star_sight', true);
+Toggles.create('Star GP sight', 'star_gp_sight', true);
+Toggles.create('Star GP', 'star_gp', true);
+Toggles.create('Horizon', 'hrz', true);
+Toggles.create('Sextant', 'sextant', true);
+Toggles.create('GP distance', 'arc', true);
+Toggles.create('Horizontal', 'horizontal', true);
 
 Scene.init(ctx);
 
 window.addEventListener('keydown', e => {
 	const { code } = e;
-	if (code.startsWith('Digit')) {
+	const focused = document.querySelector('input[type="text"]:focus');
+	if (!focused && code.startsWith('Digit')) {
 		const digit = code.replace('Digit', '');
 		const index = digit === '0' ? 9 : digit - 1;
 		const e = document.querySelectorAll('.tabs button')[index];
@@ -54,7 +55,7 @@ window.addEventListener('keydown', e => {
 			e.click();
 		}
 	}
-	if (code.startsWith('Numpad')) {
+	if (!focused && code.startsWith('Numpad')) {
 		const digit = code.replace('Numpad', '');
 		const index = digit === '0' ? 9 : digit - 1;
 		const e = document.querySelectorAll('.tab-content:not(.hidden) button')[index];

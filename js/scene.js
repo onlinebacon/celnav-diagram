@@ -24,13 +24,16 @@ const COLOR = {
 	z1: '#fc5',
 	z2: '#05c',
 	angle: '#fff',
-	horizontal: '#c52',
+	horizontal: 'rgba(0, 255, 255, 0.5)',
 };
 
 const earthRadiusMiles = 3958.76;
 const starRadius = 10;
 const lineExcess = 50;
 const horizontalLen = 300;
+
+const d360 = Trig.deg(360);
+const d180 = Trig.deg(180);
 
 // Calculated vars
 let obsHeight = 0;
@@ -138,7 +141,6 @@ const drawStarGP = () => {
 	ctx.spot(starGPVecPos, COLOR.spot);
 };
 const drawGPDistanceArc = () => {
-	const d360 = Trig.deg(360);
 	let dif = (VARS.star_dir - VARS.obs_dir + d360)%d360;
 	ctx.arc(vec2(0, 0), earthRadius, VARS.obs_dir, VARS.obs_dir + dif, COLOR.angle);
 	let dist = Trig.toRad(dif)*earthRadiusMiles;
@@ -163,6 +165,7 @@ const render = () => {
 	if (Toggles.get('hrz')) drawHorizon();
 	if (Toggles.get('down')) drawDown();
 	if (Toggles.get('up')) drawUp();
+	if (Toggles.get('horizontal')) drawHorizontal();
 	if (Toggles.get('star_sight')) drawObsStarSight();
 	if (Toggles.get('arc')) drawGPDistanceArc();
 	if (Toggles.get('sextant')) drawSextant();
@@ -171,7 +174,6 @@ const render = () => {
 	if (Toggles.get('earth')) drawEarthCenter();
 	if (Toggles.get('gp')) drawObserverGP();
 	if (Toggles.get('star_gp')) drawStarGP();
-	if (Toggles.get('horizontal')) drawHorizontal();
 };
 
 const frameLoop = () => {
@@ -316,3 +318,15 @@ Actions.add('Center star', () => {
 		center = CENTER_STAR;
 	});
 });
+
+const calcAngle = ([ x, y ]) => {
+	const len = (x**2 + y**2)**0.5;
+	if (len === 0) {
+		return 0;
+	}
+	const abs = Trig.acos(y/len);
+	if (x >= 0) {
+		return abs;
+	}
+	return d360 - abs;
+};
