@@ -1,5 +1,7 @@
 import * as DOM from './dom.js';
 
+export const VARS = {};
+
 export const linear = {
 	fromNormal: (normal, min, max) => {
 		return min + normal*(max - min);
@@ -33,7 +35,7 @@ export const exp10 = {
 	},
 };
 
-export const build = ({
+export const add = ({
 	label = 'Label',
 	min = 0.0,
 	val = 0.5,

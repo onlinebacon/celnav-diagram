@@ -29,7 +29,9 @@ window.addEventListener('keydown', e => {
 	}
 });
 
-Tabs.add({ label: 'Toggles' });
+Tabs.add({
+	label: 'Toggles',
+});
 Tabs.add({
 	label: 'Variables',
 	onselect: () => {

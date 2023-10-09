@@ -66,3 +66,8 @@ body {
 	background-color: #ccc;
 	color: #444;
 }
+.toggles {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+}

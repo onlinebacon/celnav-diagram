@@ -1,5 +1,5 @@
 import DrawingContext from './drawing.js';
-import * as Range from './range.js';
+import * as Range from './variables.js';
 import * as Trig from './trig.js';
 import { vec2 } from './vec2.js';
 
@@ -163,78 +163,78 @@ export const init = (drawingContext) => {
 	frameLoop();
 };
 
-Range.build({
-	label: 'Scale',
-	min: 0.05,
-	max: 40,
-	val: pxMileRatio,
-	ease: Range.exp10,
-	round: (val) => Number(val.toPrecision(3)),
-	format: (val) => val + ' px/mi',
-	onchange: (val) => pxMileRatio = val,
-});
+// Range.build({
+// 	label: 'Scale',
+// 	min: 0.05,
+// 	max: 40,
+// 	val: pxMileRatio,
+// 	ease: Range.exp10,
+// 	round: (val) => Number(val.toPrecision(3)),
+// 	format: (val) => val + ' px/mi',
+// 	onchange: (val) => pxMileRatio = val,
+// });
 
-Range.build({
-	label: 'Observer position',
-	min: 0,
-	max: 360,
-	val: Number(Trig.toDeg(obsDir).toFixed(1)),
-	parse: (s) => Number(s.repalce(/\s*°\s*$/, '')),
-	round: (val) => Number(val.toFixed(1)),
-	format: (val) => val + '°',
-	onchange: (val) => obsDir = Trig.deg(val),
-});
+// Range.build({
+// 	label: 'Observer position',
+// 	min: 0,
+// 	max: 360,
+// 	val: Number(Trig.toDeg(obsDir).toFixed(1)),
+// 	parse: (s) => Number(s.repalce(/\s*°\s*$/, '')),
+// 	round: (val) => Number(val.toFixed(1)),
+// 	format: (val) => val + '°',
+// 	onchange: (val) => obsDir = Trig.deg(val),
+// });
 
-Range.build({
-	label: 'Observer height',
-	min: 0,
-	val: obsHeightMiles,
-	max: 500,
-	ease: Range.quadratic,
-	round: (val) => Number(val.toPrecision(3)),
-	format: (val) => val + ' mi',
-	onchange: (val) => obsHeightMiles = val,
-});
+// Range.build({
+// 	label: 'Observer height',
+// 	min: 0,
+// 	val: obsHeightMiles,
+// 	max: 500,
+// 	ease: Range.quadratic,
+// 	round: (val) => Number(val.toPrecision(3)),
+// 	format: (val) => val + ' mi',
+// 	onchange: (val) => obsHeightMiles = val,
+// });
 
-Range.build({
-	label: 'Star position',
-	min: 0,
-	max: 360,
-	val: Number(Trig.toDeg(starDir).toFixed(1)),
-	round: (val) => Number(val.toFixed(1)),
-	format: (val) => val + '°',
-	onchange: (val) => starDir = Trig.deg(val),
-});
+// Range.build({
+// 	label: 'Star position',
+// 	min: 0,
+// 	max: 360,
+// 	val: Number(Trig.toDeg(starDir).toFixed(1)),
+// 	round: (val) => Number(val.toFixed(1)),
+// 	format: (val) => val + '°',
+// 	onchange: (val) => starDir = Trig.deg(val),
+// });
 
-Range.build({
-	label: 'Star height',
-	min: 0,
-	val: starHeightMiles,
-	max: 1e6,
-	ease: Range.quadratic,
-	round: (val) => Number(val.toPrecision(3)),
-	format: (val) => val + ' mi',
-	onchange: (val) => starHeightMiles = val,
-});
+// Range.build({
+// 	label: 'Star height',
+// 	min: 0,
+// 	val: starHeightMiles,
+// 	max: 1e6,
+// 	ease: Range.quadratic,
+// 	round: (val) => Number(val.toPrecision(3)),
+// 	format: (val) => val + ' mi',
+// 	onchange: (val) => starHeightMiles = val,
+// });
 
-Range.build({
-	label: 'Sextant. Z1',
-	min: 0,
-	val: Math.round(Trig.toDeg(z1Dir)),
-	max: 180,
-	ease: Range.linear,
-	round: (val) => Number(val.toFixed(1)),
-	format: (val) => val + '°',
-	onchange: (val) => z1Dir = Trig.deg(val),
-});
+// Range.build({
+// 	label: 'Sextant. Z1',
+// 	min: 0,
+// 	val: Math.round(Trig.toDeg(z1Dir)),
+// 	max: 180,
+// 	ease: Range.linear,
+// 	round: (val) => Number(val.toFixed(1)),
+// 	format: (val) => val + '°',
+// 	onchange: (val) => z1Dir = Trig.deg(val),
+// });
 
-Range.build({
-	label: 'Sextant. Z2',
-	min: 0,
-	val: Math.round(Trig.toDeg(z2Dir)),
-	max: 180,
-	ease: Range.linear,
-	round: (val) => Number(val.toFixed(1)),
-	format: (val) => val + '°',
-	onchange: (val) => z2Dir = Trig.deg(val),
-});
+// Range.build({
+// 	label: 'Sextant. Z2',
+// 	min: 0,
+// 	val: Math.round(Trig.toDeg(z2Dir)),
+// 	max: 180,
+// 	ease: Range.linear,
+// 	round: (val) => Number(val.toFixed(1)),
+// 	format: (val) => val + '°',
+// 	onchange: (val) => z2Dir = Trig.deg(val),
+// });

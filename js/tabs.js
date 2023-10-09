@@ -2,9 +2,9 @@ import * as DOM from './dom.js';
 
 const tabs = [];
 
-export const add = ({ label, onselect, onunselect }) => {
+export const add = ({ label, selected = false, onselect, onunselect }) => {
 	const button = DOM.create('button', [ DOM.text(label) ]);
-	const tab = { button, selected: false, onselect, onunselect };
+	const tab = { button, selected, onselect, onunselect };
 	document.querySelector('.tabs').appendChild(button);
 	tabs.push(tab);
 	if (tab.selected) {
@@ -27,8 +27,4 @@ export const add = ({ label, onselect, onunselect }) => {
 			onselect?.();
 		}
 	});
-};
-
-export const onChange = () => {
-
 };
