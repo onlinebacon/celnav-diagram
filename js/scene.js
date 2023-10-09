@@ -179,7 +179,7 @@ Vars.add({
 	label: 'Scale',
 	name: 'scale',
 	min: 0.0001,
-	max: 150,
+	max: 100,
 	init: Number((250/earthRadiusMiles).toPrecision(3)),
 	ease: Vars.exp10,
 	round: (val) => Number(val.toPrecision(3)),
