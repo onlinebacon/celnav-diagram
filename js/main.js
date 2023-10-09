@@ -32,6 +32,7 @@ window.addEventListener('keydown', e => {
 
 Tabs.add('Toggles', '.toggles', true);
 Tabs.add('Variables', '.variables');
+Tabs.add('Actions', '.actions');
 
 Toggles.create('Earth', 'earth', true);
 Toggles.create('Observer', 'observer', false);

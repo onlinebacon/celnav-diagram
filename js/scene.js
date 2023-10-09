@@ -3,6 +3,9 @@ import * as Trig from './trig.js';
 import * as Toggles from './toggles.js';
 import { vec2 } from './vec2.js';
 import * as Vars from './variables.js';
+import * as Actions from './actions.js';
+import * as Animation from './animation.js';
+import { smooth } from './ease.js';
 
 const { VARS } = Vars;
 
@@ -25,7 +28,6 @@ const COLOR = {
 const earthRadiusMiles = 3958.76;
 const starRadius = 10;
 const lineExcess = 50;
-const arrowLen = 100;
 
 // Calculated vars
 let obsHeight = 0;
@@ -36,6 +38,23 @@ let starVecPos = vec2();
 let obsVecDir = vec2();
 let obsGPVecPos = vec2();
 let starGPVecPos = vec2();
+
+const CENTER_VEC   = 0x0;
+const CENTER_OBS   = 0x1;
+const CENTER_EARTH = 0x2;
+const CENTER_STAR  = 0x3;
+
+let centerVec = vec2(0, 0);
+let center = CENTER_EARTH;
+
+const getCenter = () => {
+	switch (center) {
+		case CENTER_VEC: return centerVec;
+		case CENTER_OBS: return obsVecPos;
+		case CENTER_EARTH: return vec2(0, 0);
+		case CENTER_STAR: return starVecPos;
+	}
+};
 
 const recalculateVars = () => {
 	earthRadius = earthRadiusMiles*VARS.scale;
@@ -72,7 +91,7 @@ const drawDown = () => {
 };
 const drawUp = () => {
 	const a = obsVecPos;
-	const b = obsVecPos.plus(obsVecDir.scale(arrowLen));
+	const b = obsVecPos.plus(obsVecDir.scale(VARS.arrow_len));
 	ctx.arrow(a, b, COLOR.up);
 };
 const drawHorizon = () => {
@@ -95,16 +114,16 @@ const drawEarthCenterStarLine = () => drawLineWithExcess(
 const drawSextant = () => {
 	const z1VecDir = vec2(0, 1).rot(VARS.obs_dir + VARS.sxt_idx_dir);
 	const z2VecDir = vec2(0, 1).rot(VARS.obs_dir + VARS.sxt_hrz_dir);
-	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(arrowLen)), COLOR.z1);
-	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(arrowLen)), COLOR.z2);
+	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(VARS.arrow_len)), COLOR.z1);
+	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(VARS.arrow_len)), COLOR.z2);
 	let angA = VARS.obs_dir + VARS.sxt_idx_dir;
 	let angB = VARS.obs_dir + VARS.sxt_hrz_dir;
 	if (VARS.sxt_idx_dir > VARS.sxt_hrz_dir) {
 		[ angA, angB ] = [ angB, angA ];
 	}
 	const reading = Number(Trig.toDeg(VARS.sxt_hrz_dir - VARS.sxt_idx_dir).toFixed(1)) + '°';
-	ctx.arc(obsVecPos, arrowLen/2, angA, angB, COLOR.angle);
-	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(arrowLen/2 + 3));
+	ctx.arc(obsVecPos, VARS.arrow_len/2, angA, angB, COLOR.angle);
+	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(VARS.arrow_len/2 + 3));
 	ctx.fontSize(15);
 	ctx.textAlign('left').textBaseline('middle');
 	ctx.text(reading, textVecPos, COLOR.angle);
@@ -129,11 +148,7 @@ const drawGPDistanceArc = () => {
 const render = () => {
 	ctx.clear();
 	recalculateVars();
-	if (Toggles.get('observer')) {
-		ctx.setCenter(...obsVecPos);
-	} else {
-		ctx.setCenter(0, 0);
-	}
+	ctx.setCenter(...getCenter());
 	if (Toggles.get('earth')) drawEarth();
 	if (Toggles.get('star_gp_sight')) drawEarthCenterStarLine();
 	if (Toggles.get('hrz')) drawHorizon();
@@ -242,4 +257,51 @@ Vars.add({
 	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
+});
+
+Vars.add({
+	label: 'Arrow length',
+	name: 'arrow_len',
+	init: 100,
+	min: 10,
+	max: 300,
+	ease: Vars.linear,
+	parse: (str) => Number(str.replace(/\s*px\s*$/, '')),
+	format: (val) => val + 'px',
+});
+
+Actions.add('Center observer', () => {
+	Animation.finishAll();
+	const a = getCenter();
+	center = CENTER_VEC;
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		centerVec = a.interpolate(obsVecPos, t);
+	}, () => {
+		center = CENTER_OBS;
+	});
+});
+
+Actions.add('Center earth', () => {
+	Animation.finishAll();
+	const a = getCenter();
+	center = CENTER_VEC;
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		centerVec = a.interpolate(vec2(0, 0), t);
+	}, () => {
+		center = CENTER_EARTH;
+	});
+});
+
+Actions.add('Center star', () => {
+	Animation.finishAll();
+	const a = getCenter();
+	center = CENTER_VEC;
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		centerVec = a.interpolate(starVecPos, t);
+	}, () => {
+		center = CENTER_STAR;
+	});
 });

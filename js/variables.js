@@ -90,6 +90,11 @@ export const add = ({
 	VIEW[name] = init;
 	VARS[name] = map(init);
 	button.addEventListener('click', () => {
+		if (DOM.hasClass(button, 'selected')) {
+			DOM.removeClass(button, 'selected');
+			range.style.display = 'none';
+			return;
+		}
 		const selected = document.querySelector('.variables .selected');
 		if (selected) {
 			DOM.removeClass(selected, 'selected');
