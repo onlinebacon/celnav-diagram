@@ -6,6 +6,9 @@ export const add = ({ label, selected = false, onselect, onunselect }) => {
 	const button = DOM.create('button', [ DOM.text(label) ]);
 	const tab = { button, selected, onselect, onunselect };
 	document.querySelector('.tabs').appendChild(button);
+	if (selected) {
+		DOM.addClass(button, 'selected');
+	}
 	tabs.push(tab);
 	if (tab.selected) {
 		onselect?.();

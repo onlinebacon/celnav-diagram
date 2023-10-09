@@ -4,6 +4,12 @@ body {
 	overflow: hidden;
 	margin: 0px;
 }
+.toggles,
+.variables {
+	position: fixed;
+	top: 50px;
+	left: 10px;
+}
 .var-range {
 	transition: opacity 0.25s;
 	opacity: 0.2;
@@ -38,11 +44,6 @@ body {
 .var-range input[type="range"] {
 	width: 512px;
 }
-.var-box {
-	position: fixed;
-	top: 50px;
-	left: 10px;
-}
 .tabs {
 	font-size: 0px;
 	position: fixed;
@@ -66,8 +67,25 @@ body {
 	background-color: #ccc;
 	color: #444;
 }
-.toggles {
-	position: fixed;
-	top: 0px;
-	left: 0px;
+.toggles button {
+	border: none;
+	height: 24px;
+	border-radius: 3px;
+	background-color: #333;
+	color: #ccc;
+	cursor: pointer;
+	width: 120px;
+	display: block;
+	opacity: 0.5;
+	transition: 0.25s;
+}
+.toggles button:hover {
+	opacity: 1;
+}
+.toggles button:not(:nth-child(1)) {
+	margin-top: 5px;
+}
+.toggles button.on {
+	background-color: #ccc;
+	color: #333;
 }

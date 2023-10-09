@@ -3,7 +3,7 @@ import { vec2 } from './vec2.js';
 
 const { PI } = Math;
 const TAU = PI*2;
-const DEF_LINE_WID = 1;
+const DEF_LINE_WID = 2;
 const DEF_SPOT_RAD = DEF_LINE_WID*1.5;
 
 export default class DrawingContext {
@@ -135,7 +135,7 @@ export default class DrawingContext {
 
 		const dif = b.minus(a);
 		const dist = dif.len();
-		const tipSize = Math.min(dist*0.3, 8);
+		const tipSize = Math.min(dist*0.3, DEF_LINE_WID*8);
 		const dir = dif.normalized();
 
 		this.lineWidth(Math.min(DEF_LINE_WID, 0.1*dist));

@@ -100,5 +100,5 @@ export const add = ({
 	if (val != null) {
 		onchange(val);
 	}
-	document.querySelector('.var-box').appendChild(root);
+	document.querySelector('.variables').appendChild(root);
 };

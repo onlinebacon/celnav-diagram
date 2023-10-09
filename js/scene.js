@@ -1,6 +1,6 @@
 import DrawingContext from './drawing.js';
-import * as Range from './variables.js';
 import * as Trig from './trig.js';
+import * as Toggles from './toggles.js';
 import { vec2 } from './vec2.js';
 
 let ctx = true ? null : new DrawingContext(null);
@@ -137,20 +137,50 @@ const drawGPDistanceArc = () => {
 const render = () => {
 	ctx.clear();
 	recalculateVars();
-	ctx.setCenter(...obsVecPos);
-	drawEarth();
-	drawEarthCenterStarLine();
-	drawHorizon();
-	drawUp();
-	drawDown();
-	drawObsStarSight();
-	drawGPDistanceArc();
-	drawSextant();
-	drawStar();
-	drawObserver();
-	drawEarthCenter();
-	drawObserverGP();
-	drawStarGP();
+	if (Toggles.get('observer')) {
+		ctx.setCenter(...obsVecPos);
+	} else {
+		ctx.setCenter(0, 0);
+	}
+	if (Toggles.get('earth')) {
+		drawEarth();
+	}
+	if (Toggles.get('star_gp_sight')) {
+		drawEarthCenterStarLine();
+	}
+	if (Toggles.get('hrz')) {
+		drawHorizon();
+	}
+	if (Toggles.get('down')) {
+		drawDown();
+	}
+	if (Toggles.get('up')) {
+		drawUp();
+	}
+	if (Toggles.get('star_sight')) {
+		drawObsStarSight();
+	}
+	if (Toggles.get('arc')) {
+		drawGPDistanceArc();
+	}
+	if (Toggles.get('sextant')) {
+		drawSextant();
+	}
+	if (Toggles.get('drawStar')) {
+		drawStar();
+	}
+	if (Toggles.get('observer')) {
+		drawObserver();
+	}
+	if (Toggles.get('earth')) {
+		drawEarthCenter();
+	}
+	if (Toggles.get('gp')) {
+		drawObserverGP();
+	}
+	if (Toggles.get('star_gp')) {
+		drawStarGP();
+	}
 };
 
 const frameLoop = () => {
