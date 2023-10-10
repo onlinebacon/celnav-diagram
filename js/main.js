@@ -72,9 +72,9 @@ window.addEventListener('keydown', e => {
 window.addEventListener('wheel', e => {
 	const { deltaY } = e;
 	if (deltaY > 0) {
-		Vars.slide('scale', 0.005);
+		Vars.slide('scale', -0.005);
 	}
 	if (deltaY < 0) {
-		Vars.slide('scale', -0.005);
+		Vars.slide('scale', 0.005);
 	}
 });
