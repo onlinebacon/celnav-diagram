@@ -1,7 +1,8 @@
 import * as DOM from './dom.js';
 
-export const VARS = {};
+export const VALS = {};
 const VIEW = {};
+const MAP = {};
 
 export const linear = {
 	fromNormal: (normal, min, max) => {
@@ -36,7 +37,7 @@ export const exp10 = {
 	},
 };
 
-let currentVar = {
+let currentVarConfig = {
 	name: '',
 	min: 0,
 	max: 1,
@@ -52,23 +53,28 @@ const divLabel = range.querySelector('.label');
 const inputText = range.querySelector('input[type="text"]');
 const inputRange = range.querySelector('input[type="range"]');
 
-inputRange.addEventListener('input', () => {
-	const { name, min, max, ease, round, format, map } = currentVar;
-	const normal = Number(inputRange.value);
-	const value = round(ease.fromNormal(normal, min, max));
+const setNormal = (config, normal, round = true) => {
+	const { name, min, max, ease, map } = config;
+	const rawVal = ease.fromNormal(normal, min, max);
+	const value = round ? config.round(rawVal) : rawVal;
 	VIEW[name] = value;
-	VARS[name] = map(value);
-	inputText.value = format(value);
+	VALS[name] = map(value);
+	return value;
+};
+
+inputRange.addEventListener('input', () => {
+	const value = setNormal(currentVarConfig, Number(inputRange.value));
+	inputText.value = currentVarConfig.format(value);
 });
 
 inputText.addEventListener('change', () => {
-	const { name, min, max, ease, parse, map } = currentVar;
+	const { name, min, max, ease, parse, map } = currentVarConfig;
 	const value = parse(inputText.value);
 	if (isNaN(value)) {
 		return;
 	}
 	VIEW[name] = value;
-	VARS[name] = map(value);
+	VALS[name] = map(value);
 	const normal = ease.toNormal(value, min, max);
 	inputRange.value = normal;
 });
@@ -85,10 +91,11 @@ export const add = ({
 	parse = (s) => Number(s),
 	map = (value) => value,
 }) => {
+	const config = { label, name, init, min, max, ease, round, format, parse, map };
 	const button = DOM.create('button', [ DOM.text(label) ]);
 	document.querySelector('.variables').appendChild(button);
 	VIEW[name] = init;
-	VARS[name] = map(init);
+	VALS[name] = map(init);
 	button.addEventListener('click', () => {
 		if (DOM.hasClass(button, 'selected')) {
 			DOM.removeClass(button, 'selected');
@@ -105,6 +112,29 @@ export const add = ({
 		const value = VIEW[name];
 		inputText.value = format(value);
 		inputRange.value = ease.toNormal(value, min, max);
-		currentVar = { name, min, max, ease, round, format, parse, map };
+		currentVarConfig = config;
 	});
+	MAP[name] = config;
+};
+
+export const slide = (name, offset) => {
+	const config = MAP[name];
+	const { min, max, ease } = config;
+	const normal = ease.toNormal(VIEW[name], min, max) + offset;
+	const value = setNormal(config, normal);
+	if (config === currentVarConfig) {
+		inputRange.value = normal;
+		inputText.value = config.format(value);
+	}
+};
+
+export const set = (name, value, round) => {
+	const config = MAP[name];
+	const { min, max, ease } = config;
+	const normal = ease.toNormal(value, min, max);
+	value = setNormal(config, normal, round);
+	if (config === currentVarConfig) {
+		inputText.value = config.format(value);
+		inputRange.value = normal;
+	}
 };

@@ -5,6 +5,9 @@ const { PI } = Math;
 const TAU = PI*2;
 const DEF_LINE_WID = 2;
 const DEF_SPOT_RAD = DEF_LINE_WID*1.5;
+const d150 = Trig.deg(150);
+const d210 = Trig.deg(210);
+const cos30 = Trig.cos(Trig.deg(30));
 
 export default class DrawingContext {
 	constructor(canvas) {
@@ -13,7 +16,6 @@ export default class DrawingContext {
 		this.bgColor = '#111';
 		this.canvasSize(canvas.width, canvas.height);
 		this.setCenter(0, 0);
-		this.scale = 1;
 	}
 	canvasSize(width, height) {
 		const { canvas } = this;
@@ -26,17 +28,11 @@ export default class DrawingContext {
 		this.cy = y;
 		return this;
 	}
-	unscaled(value) {
-		return value/this.scale;
-	}
-	__project([ x, y ]) {
-		const { canvas, cx, cy, scale } = this;
-		x = canvas.width/2 + (x - cx)*scale;
-		y = canvas.height/2 - (y - cy)*scale;
+	fromCenter([ x, y ]) {
+		const { canvas, cx, cy } = this;
+		x = canvas.width/2 + (x - cx);
+		y = canvas.height/2 - (y - cy);
 		return [ x, y ];
-	}
-	__scale(val) {
-		return val*this.scale;
 	}
 	clear() {
 		this.ctx.fillStyle = this.bgColor;
@@ -44,11 +40,11 @@ export default class DrawingContext {
 		return this;
 	}
 	moveTo(vec) {
-		this.ctx.moveTo(...this.__project(vec));
+		this.ctx.moveTo(...this.fromCenter(vec));
 		return this;
 	}
 	lineTo(vec) {
-		this.ctx.lineTo(...this.__project(vec));
+		this.ctx.lineTo(...this.fromCenter(vec));
 		return this;
 	}
 	lineWidth(val) {
@@ -61,7 +57,7 @@ export default class DrawingContext {
 			ctx.fillStyle = color;
 		}
 		ctx.beginPath();
-		ctx.arc(...this.__project(pos), this.__scale(DEF_SPOT_RAD), 0, TAU);
+		ctx.arc(...this.fromCenter(pos), DEF_SPOT_RAD, 0, TAU);
 		ctx.fill();
 		return this;
 	}
@@ -70,8 +66,8 @@ export default class DrawingContext {
 		if (color != null) {
 			ctx.fillStyle = color;
 		}
-		const [ cx, cy ] = this.__project(pos);
-		const r2 = this.__scale(radius);
+		const [ cx, cy ] = this.fromCenter(pos);
+		const r2 = radius;
 		const r1 = r2*0.35;
 		ctx.beginPath();
 		for (let i=0; i<5; ++i) {
@@ -94,7 +90,7 @@ export default class DrawingContext {
 
 		this.lineWidth(DEF_LINE_WID);
 		ctx.beginPath();
-		ctx.arc(...this.__project(center), this.__scale(radius), 0, TAU);
+		ctx.arc(...this.fromCenter(center), radius, 0, TAU);
 
 		if (fillColor !== null) {
 			ctx.fillStyle = fillColor;
@@ -141,11 +137,11 @@ export default class DrawingContext {
 		this.lineWidth(Math.min(DEF_LINE_WID, 0.1*dist));
 		ctx.beginPath();
 		this.moveTo(a);
-		this.lineTo(b.minus(dir.scale(tipSize*Trig.cos(Trig.deg(30)))));
+		this.lineTo(b.minus(dir.scale(tipSize*cos30)));
 		ctx.stroke();
 
-		const c = b.plus(dir.rot(Trig.deg(150)).scale(tipSize));
-		const d = b.plus(dir.rot(Trig.deg(210)).scale(tipSize));
+		const c = b.plus(dir.rot(d150).scale(tipSize));
+		const d = b.plus(dir.rot(d210).scale(tipSize));
 
 		ctx.beginPath();
 		this.moveTo(b);
@@ -156,41 +152,22 @@ export default class DrawingContext {
 	}
 	arc(center, radius, a, b, color) {
 		const { ctx } = this;
-		const [ x, y ] = this.__project(center);
+		const [ x, y ] = this.fromCenter(center);
 		ctx.strokeStyle = color;
 		ctx.beginPath();
-		ctx.arc(x, y, this.__scale(radius), -PI/2 + Trig.toRad(a), -PI/2 + Trig.toRad(b), false);
+		ctx.arc(x, y, radius, -PI/2 + Trig.toRad(a), -PI/2 + Trig.toRad(b), false);
 		ctx.stroke();
 		return this;
 	}
-	coordOf([ x, y ]) {
-		const { ax, bx, ay, by } = this;
-		return vec2((x - bx)/ax, (y - by)/ay);
-	}
-	comment(lines) {
-		const { ctx } = this;
-		ctx.textAlign = 'center';
-		ctx.textBaseline = 'bottom';
-		ctx.fillStyle = '#aaa';
-		let space = this.__scale(10);
-		let size = this.__scale(20);
-		const stride = space + size;
-		ctx.font = size + 'px arial';
-		for (let i=0; i<lines.length; ++i) {
-			const line = lines[lines.length - 1 - i];
-			ctx.fillText(line, this.canvas.width/2, this.canvas.height - (space + stride*i));
-		}
-		return this;
-	}
 	text(text, pos, color) {
-		const [ x, y ] = this.__project(pos);
+		const [ x, y ] = this.fromCenter(pos);
 		const { ctx } = this;
 		ctx.fillStyle = color;
 		ctx.fillText(text, x, y);
 		return this;
 	}
 	fontSize(value) {
-		this.ctx.font = this.__scale(value) + 'px arial';
+		this.ctx.font = value + 'px arial';
 		return this;
 	}
 	textAlign(type) {

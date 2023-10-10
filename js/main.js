@@ -3,6 +3,7 @@ import * as DOM from './dom.js';
 import * as Scene from './scene.js';
 import * as Tabs from './tabs.js';
 import * as Toggles from './toggles.js';
+import * as Vars from './variables.js';
 
 const canvas = document.querySelector('canvas');
 const ctx = new DrawingContext(canvas);
@@ -24,9 +25,9 @@ fillScreenWithCanvas();
 
 window.addEventListener('resize', fillScreenWithCanvas);
 
-Tabs.add('Toggles', '.toggles', true);
+Tabs.add('Toggles', '.toggles');
 Tabs.add('Variables', '.variables');
-Tabs.add('Actions', '.actions');
+Tabs.add('Actions', '.actions', true);
 
 Toggles.create('Earth', 'earth', true);
 Toggles.create('Observer', 'observer', true);
@@ -62,5 +63,15 @@ window.addEventListener('keydown', e => {
 		if (e && !DOM.hasClass(e, 'selected')) {
 			e.click();
 		}
+	}
+});
+
+window.addEventListener('wheel', e => {
+	const { deltaY } = e;
+	if (deltaY > 0) {
+		Vars.slide('scale', 0.005);
+	}
+	if (deltaY < 0) {
+		Vars.slide('scale', -0.005);
 	}
 });

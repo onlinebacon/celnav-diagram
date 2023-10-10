@@ -8,7 +8,7 @@ import * as Animation from './animation.js';
 import * as Miles from './miles.js';
 import { smooth } from './ease.js';
 
-const { VARS } = Vars;
+const { VALS } = Vars;
 
 let ctx = true ? null : new DrawingContext(null);
 
@@ -29,8 +29,8 @@ const COLOR = {
 
 const earthRadiusMiles = 3958.76;
 const starRadius = 10;
-const lineExcess = 50;
-const horizontalLen = 300;
+const lineExcess = 80;
+const horizontalLen = 500;
 
 const d360 = Trig.deg(360);
 const d180 = Trig.deg(180);
@@ -44,6 +44,8 @@ let starVecPos = vec2();
 let obsVecDir = vec2();
 let obsGPVecPos = vec2();
 let starGPVecPos = vec2();
+let hrzVecDir = vec2();
+let hrzVecPos = vec2();
 
 const CENTER_VEC   = 0x0;
 const CENTER_OBS   = 0x1;
@@ -51,7 +53,7 @@ const CENTER_EARTH = 0x2;
 const CENTER_STAR  = 0x3;
 
 let centerVec = vec2(0, 0);
-let center = CENTER_EARTH;
+let center = CENTER_OBS;
 
 const getCenter = () => {
 	switch (center) {
@@ -63,15 +65,22 @@ const getCenter = () => {
 };
 
 const recalculateVars = () => {
-	earthRadius = earthRadiusMiles*VARS.scale;
-	starHeight = VARS.star_height*VARS.scale;
-	obsHeight = VARS.obs_height*VARS.scale;
-	const starVecDir = vec2(0, 1).rot(VARS.star_dir);
-	obsVecDir = vec2(0, 1).rot(VARS.obs_dir);
+	earthRadius = earthRadiusMiles*VALS.scale;
+	starHeight = VALS.star_height*VALS.scale;
+	obsHeight = VALS.obs_height*VALS.scale;
+	const starVecDir = vec2(0, 1).rot(VALS.star_dir);
+	obsVecDir = vec2(0, 1).rot(VALS.obs_dir);
 	obsVecPos = obsVecDir.scale(earthRadius + obsHeight);
 	starVecPos = starVecDir.scale(earthRadius + starHeight);
 	obsGPVecPos = obsVecDir.scale(earthRadius);
 	starGPVecPos = starVecDir.scale(earthRadius);
+	const hip = earthRadius + obsHeight;
+	const adj = earthRadius;
+	const dip = Trig.acos(adj/hip);
+	hrzVecDir = vec2(1, 0).rot(VALS.obs_dir + dip);
+	const hrzDist = (hip**2 - adj**2)**0.5;
+	hrzVecPos = obsVecPos.plus(hrzVecDir.scale(hrzDist));
+
 };
 const drawLineWithExcess = (a, b, color) => {
 	const excess = b.minus(a).normalized().scale(lineExcess);
@@ -97,16 +106,10 @@ const drawDown = () => {
 };
 const drawUp = () => {
 	const a = obsVecPos;
-	const b = obsVecPos.plus(obsVecDir.scale(VARS.arrow_len));
+	const b = obsVecPos.plus(obsVecDir.scale(VALS.arrow_len));
 	ctx.arrow(a, b, COLOR.up);
 };
 const drawHorizon = () => {
-	const hip = earthRadius + obsHeight;
-	const adj = earthRadius;
-	const dip = Trig.acos(adj/hip);
-	const hrzVecDir = vec2(1, 0).rot(VARS.obs_dir + dip);
-	const hrzDist = (hip**2 - adj**2)**0.5;
-	const hrzVecPos = obsVecPos.plus(hrzVecDir.scale(hrzDist));
 	const a = obsVecPos.minus(hrzVecDir.scale(lineExcess));
 	const b = hrzVecPos.plus(hrzVecDir.scale(lineExcess));
 	ctx.line(a, b, COLOR.horizon);
@@ -118,19 +121,19 @@ const drawEarthCenterStarLine = () => drawLineWithExcess(
 	COLOR.starSight,
 );
 const drawSextant = () => {
-	const z1VecDir = vec2(0, 1).rot(VARS.obs_dir + VARS.sxt_idx_dir);
-	const z2VecDir = vec2(0, 1).rot(VARS.obs_dir + VARS.sxt_hrz_dir);
-	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(VARS.arrow_len)), COLOR.z1);
-	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(VARS.arrow_len)), COLOR.z2);
-	let angA = VARS.obs_dir + VARS.sxt_idx_dir;
-	let angB = VARS.obs_dir + VARS.sxt_hrz_dir;
-	if (VARS.sxt_idx_dir > VARS.sxt_hrz_dir) {
+	const z1VecDir = vec2(0, 1).rot(VALS.obs_dir + VALS.sxt_idx_dir);
+	const z2VecDir = vec2(0, 1).rot(VALS.obs_dir + VALS.sxt_hrz_dir);
+	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(VALS.arrow_len)), COLOR.z1);
+	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(VALS.arrow_len)), COLOR.z2);
+	let angA = VALS.obs_dir + VALS.sxt_idx_dir;
+	let angB = VALS.obs_dir + VALS.sxt_hrz_dir;
+	if (VALS.sxt_idx_dir > VALS.sxt_hrz_dir) {
 		[ angA, angB ] = [ angB, angA ];
 	}
-	const reading = Number(Trig.toDeg(VARS.sxt_hrz_dir - VARS.sxt_idx_dir).toFixed(1)) + '°';
-	ctx.arc(obsVecPos, VARS.arrow_len/2, angA, angB, COLOR.angle);
-	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(VARS.arrow_len/2 + 3));
-	ctx.fontSize(15);
+	const reading = Number(Trig.toDeg(VALS.sxt_hrz_dir - VALS.sxt_idx_dir).toFixed(2)) + '°';
+	ctx.arc(obsVecPos, VALS.arrow_len/2, angA, angB, COLOR.angle);
+	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(VALS.arrow_len/2 + 3));
+	ctx.fontSize(17);
 	ctx.textAlign('left').textBaseline('middle');
 	ctx.text(reading, textVecPos, COLOR.angle);
 };
@@ -141,16 +144,16 @@ const drawStarGP = () => {
 	ctx.spot(starGPVecPos, COLOR.spot);
 };
 const drawGPDistanceArc = () => {
-	let dif = (VARS.star_dir - VARS.obs_dir + d360)%d360;
-	ctx.arc(vec2(0, 0), earthRadius, VARS.obs_dir, VARS.obs_dir + dif, COLOR.angle);
+	let dif = (VALS.star_dir - VALS.obs_dir + d360)%d360;
+	ctx.arc(vec2(0, 0), earthRadius, VALS.obs_dir, VALS.obs_dir + dif, COLOR.angle);
 	let dist = Trig.toRad(dif)*earthRadiusMiles;
 	let text = Number(dist.toFixed(2)) + ' mi';
-	const midDirVec = vec2(0, 1).rot(VARS.obs_dir + dif/2);
-	ctx.textAlign('right').textBaseline('middle');
+	const midDirVec = vec2(0, 1).rot(VALS.obs_dir + dif/2);
+	ctx.fontSize(17).textAlign('right').textBaseline('middle');
 	ctx.text(text, midDirVec.scale(earthRadius - 10), COLOR.angle);
 };
 const drawHorizontal = () => {
-	const dif = vec2(horizontalLen/2, 0).rot(VARS.obs_dir);
+	const dif = vec2(horizontalLen/2, 0).rot(VALS.obs_dir);
 	const a = obsVecPos.plus(dif);
 	const b = obsVecPos.minus(dif);
 	ctx.line(a, b, COLOR.horizontal);
@@ -191,7 +194,7 @@ Vars.add({
 	name: 'scale',
 	min: 0.0001,
 	max: 150,
-	init: Number((250/earthRadiusMiles).toPrecision(3)),
+	init: Number((400/earthRadiusMiles).toPrecision(3)),
 	ease: Vars.exp10,
 	round: (val) => Number(val.toPrecision(3)),
 	parse: (str) => str.replace(/px\/mi\s*$/i, ''),
@@ -203,8 +206,8 @@ Vars.add({
 	name: 'obs_dir',
 	min: 0,
 	max: 360,
-	init: 0,
-	round: (val) => Number(val.toFixed(1)),
+	init: 10,
+	round: (val) => Number(val.toFixed(2)),
 	parse: (s) => Number(s.repalce(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
@@ -228,7 +231,7 @@ Vars.add({
 	init: 50,
 	min: 0,
 	max: 360,
-	round: (val) => Number(val.toFixed(1)),
+	round: (val) => Number(val.toFixed(2)),
 	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
@@ -253,7 +256,7 @@ Vars.add({
 	min: 0,
 	max: 180,
 	ease: Vars.linear,
-	round: (val) => Number(val.toFixed(1)),
+	round: (val) => Number(val.toFixed(2)),
 	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
@@ -266,7 +269,7 @@ Vars.add({
 	min: 0,
 	max: 180,
 	ease: Vars.linear,
-	round: (val) => Number(val.toFixed(1)),
+	round: (val) => Number(val.toFixed(2)),
 	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
@@ -319,14 +322,64 @@ Actions.add('Center star', () => {
 	});
 });
 
-const calcAngle = ([ x, y ]) => {
-	const len = (x**2 + y**2)**0.5;
-	if (len === 0) {
-		return 0;
+const calcDir = (a, b, offset = 0) => {
+	const [ x, y ] = b.minus(a).normalized();
+	let angle = Trig.acos(y);
+	if (x < 0) {
+		angle = d360 - angle;
 	}
-	const abs = Trig.acos(y/len);
-	if (x >= 0) {
-		return abs;
-	}
-	return d360 - abs;
+	angle = (angle - offset + d360) % d360;
+	return angle;
 };
+
+Actions.add('Measure zenith', () => {
+	Animation.finishAll();
+	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
+	const idx1 = 0;
+	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const hrz1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, VALS.obs_dir));
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
+		Vars.set('sxt_hrz_dir', hrz0 + (hrz1 - hrz0)*t);
+	});
+});
+
+Actions.add('Measure dip', () => {
+	Animation.finishAll();
+	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
+	const idx1 = 90;
+	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const hrz1 = Trig.toDeg(calcDir(obsVecPos, hrzVecPos, VALS.obs_dir));
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
+		Vars.set('sxt_hrz_dir', hrz0 + (hrz1 - hrz0)*t);
+	});
+});
+
+Actions.add('Measure alt', () => {
+	Animation.finishAll();
+	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
+	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, VALS.obs_dir));
+	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const hrz1 = 90;
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
+		Vars.set('sxt_hrz_dir', hrz0 + (hrz1 - hrz0)*t);
+	});
+});
+
+Actions.add('Measure Hs', () => {
+	Animation.finishAll();
+	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
+	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, VALS.obs_dir));
+	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const hrz1 = Trig.toDeg(calcDir(obsVecPos, hrzVecPos, VALS.obs_dir));
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
+		Vars.set('sxt_hrz_dir', hrz0 + (hrz1 - hrz0)*t);
+	});
+});
