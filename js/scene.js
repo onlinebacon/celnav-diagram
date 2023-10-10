@@ -31,9 +31,7 @@ const earthRadiusMiles = 3958.76;
 const starRadius = 10;
 const lineExcess = 80;
 const horizontalLen = 500;
-
 const d360 = Trig.deg(360);
-const d180 = Trig.deg(180);
 
 // Calculated vars
 let obsHeight = 0;
@@ -51,9 +49,10 @@ const CENTER_VEC   = 0x0;
 const CENTER_OBS   = 0x1;
 const CENTER_EARTH = 0x2;
 const CENTER_STAR  = 0x3;
+const CENTER_HRZ   = 0x4;
 
 let centerVec = vec2(0, 0);
-let center = CENTER_OBS;
+let center = CENTER_EARTH;
 
 const getCenter = () => {
 	switch (center) {
@@ -61,6 +60,7 @@ const getCenter = () => {
 		case CENTER_OBS: return obsVecPos;
 		case CENTER_EARTH: return vec2(0, 0);
 		case CENTER_STAR: return starVecPos;
+		case CENTER_HRZ: return hrzVecPos;
 	}
 };
 
@@ -110,10 +110,17 @@ const drawUp = () => {
 	ctx.arrow(a, b, COLOR.up);
 };
 const drawHorizon = () => {
+	ctx.spot(hrzVecPos, COLOR.spot);
+};
+const drawHorizonLine = () => {
 	const a = obsVecPos.minus(hrzVecDir.scale(lineExcess));
 	const b = hrzVecPos.plus(hrzVecDir.scale(lineExcess));
 	ctx.line(a, b, COLOR.horizon);
-	ctx.spot(hrzVecPos, COLOR.spot);
+};
+const drawHorizonRadius = () => {
+	const a = vec2(0, 0)
+	const b = hrzVecPos;
+	drawLineWithExcess(a, b, COLOR.horizon);
 };
 const drawEarthCenterStarLine = () => drawLineWithExcess(
 	vec2(0, 0),
@@ -163,9 +170,10 @@ const render = () => {
 	ctx.clear();
 	recalculateVars();
 	ctx.setCenter(...getCenter());
-	if (Toggles.get('earth')) drawEarth();
+	drawEarth();
 	if (Toggles.get('star_gp_sight')) drawEarthCenterStarLine();
-	if (Toggles.get('hrz')) drawHorizon();
+	if (Toggles.get('hrz_rad')) drawHorizonRadius();
+	if (Toggles.get('hrz')) drawHorizonLine();
 	if (Toggles.get('down')) drawDown();
 	if (Toggles.get('up')) drawUp();
 	if (Toggles.get('horizontal')) drawHorizontal();
@@ -174,7 +182,8 @@ const render = () => {
 	if (Toggles.get('sextant')) drawSextant();
 	if (Toggles.get('star')) drawStar();
 	if (Toggles.get('observer')) drawObserver();
-	if (Toggles.get('earth')) drawEarthCenter();
+	if (Toggles.get('hrz')) drawHorizon();
+	drawEarthCenter();
 	if (Toggles.get('gp')) drawObserverGP();
 	if (Toggles.get('star_gp')) drawStarGP();
 };
@@ -194,7 +203,7 @@ Vars.add({
 	name: 'scale',
 	min: 0.0001,
 	max: 150,
-	init: Number((400/earthRadiusMiles).toPrecision(3)),
+	init: Number((300/earthRadiusMiles).toPrecision(3)),
 	ease: Vars.exp10,
 	round: (val) => Number(val.toPrecision(3)),
 	parse: (str) => str.replace(/px\/mi\s*$/i, ''),
@@ -322,6 +331,18 @@ Actions.add('Center star', () => {
 	});
 });
 
+Actions.add('Center horizon', () => {
+	Animation.finishAll();
+	const a = getCenter();
+	center = CENTER_VEC;
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		centerVec = a.interpolate(hrzVecPos, t);
+	}, () => {
+		center = CENTER_HRZ;
+	});
+});
+
 const calcDir = (a, b, offset = 0) => {
 	const [ x, y ] = b.minus(a).normalized();
 	let angle = Trig.acos(y);
@@ -358,7 +379,20 @@ Actions.add('Measure dip', () => {
 	});
 });
 
-Actions.add('Measure alt', () => {
+Actions.add('Measure horizon zenith', () => {
+	Animation.finishAll();
+	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
+	const idx1 = 0;
+	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const hrz1 = Trig.toDeg(calcDir(obsVecPos, hrzVecPos, VALS.obs_dir));
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
+		Vars.set('sxt_hrz_dir', hrz0 + (hrz1 - hrz0)*t);
+	});
+});
+
+Actions.add('Measure alt.', () => {
 	Animation.finishAll();
 	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
 	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, VALS.obs_dir));

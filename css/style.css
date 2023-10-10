@@ -39,10 +39,10 @@ body {
 	background-color: #333;
 	color: #ccc;
 	cursor: pointer;
-	width: 120px;
 	display: block;
 	opacity: 0.5;
 	transition: 0.25s;
+	text-align: left;
 }
 .tab-content button:hover {
 	opacity: 1;

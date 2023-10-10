@@ -25,23 +25,23 @@ fillScreenWithCanvas();
 
 window.addEventListener('resize', fillScreenWithCanvas);
 
-Tabs.add('Toggles', '.toggles');
+Tabs.add('Toggles', '.toggles', true);
 Tabs.add('Variables', '.variables');
-Tabs.add('Actions', '.actions', true);
+Tabs.add('Actions', '.actions');
 
-Toggles.create('Earth', 'earth', true);
-Toggles.create('Observer', 'observer', true);
-Toggles.create('Plumb', 'down', true);
-Toggles.create('Zenith', 'up', true);
-Toggles.create('GP', 'gp', true);
-Toggles.create('Star', 'star', true);
-Toggles.create('Star Sight', 'star_sight', true);
-Toggles.create('Star GP sight', 'star_gp_sight', true);
-Toggles.create('Star GP', 'star_gp', true);
-Toggles.create('Horizon', 'hrz', true);
-Toggles.create('Sextant', 'sextant', true);
-Toggles.create('GP distance', 'arc', true);
-Toggles.create('Horizontal', 'horizontal', true);
+Toggles.create('Observer', 'observer', false);
+Toggles.create('Plumb', 'down', false);
+Toggles.create('Zenith', 'up', false);
+Toggles.create('GP', 'gp', false);
+Toggles.create('Star', 'star', false);
+Toggles.create('Star Sight', 'star_sight', false);
+Toggles.create('Star GP sight', 'star_gp_sight', false);
+Toggles.create('Star GP', 'star_gp', false);
+Toggles.create('Horizon', 'hrz', false);
+Toggles.create('Sextant', 'sextant', false);
+Toggles.create('GP distance', 'arc', false);
+Toggles.create('Horizontal', 'horizontal', false);
+Toggles.create('Horizon radius', 'hrz_rad', false);
 
 Scene.init(ctx);
 
@@ -63,6 +63,9 @@ window.addEventListener('keydown', e => {
 		if (e && !DOM.hasClass(e, 'selected')) {
 			e.click();
 		}
+	}
+	if (code === 'KeyA') {
+		Toggles.all();
 	}
 });
 

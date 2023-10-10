@@ -3,7 +3,7 @@ import * as DOM from './dom.js';
 const valueMap = {};
 
 const addToggleButton = (label, name, value) => {
-	const button = DOM.create('button', [ DOM.text(label) ]);
+	const button = DOM.create('button', [ DOM.text(label) ], { name });
 	if (value) {
 		DOM.addClass(button, 'on');
 	}
@@ -25,4 +25,15 @@ export const get = (name) => {
 export const create = (label, name, value) => {
 	addToggleButton(label, name, value);
 	valueMap[name] = value;
+};
+
+export const all = () => {
+	const on = [...document.querySelectorAll('.toggles button.on')];
+	const off = [...document.querySelectorAll('.toggles button:not(.on)')];
+	console.log(on.length, off.length);
+	if (off.length !== 0) {
+		off.forEach(item => item.click());
+	} else {
+		on.forEach(item => item.click());
+	}
 };
