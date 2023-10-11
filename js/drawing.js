@@ -174,6 +174,28 @@ export default class DrawingContext {
 		this.ctx.textAlign = type;
 		return this;
 	}
+	textDirOut(text, pos, dir, gap, color) {
+		const { ctx } = this;
+		const normal = vec2(0, 1).rot(dir);
+		const a = pos.plus(normal.scale(gap));
+		const [ nx ] = normal;
+		ctx.save();
+		ctx.fillStyle = color;
+		ctx.textBaseline = 'middle';
+		const [ x, y ] = this.fromCenter(a);
+		if (nx >= 0) {
+			ctx.textAlign = 'left';
+			ctx.translate(x, y);
+			ctx.rotate(Math.PI*1.5 + Trig.toRad(dir));
+			ctx.fillText(text, 0, 0);
+		} else {
+			ctx.textAlign = 'right';
+			ctx.translate(x, y);
+			ctx.rotate(Math.PI*0.5 + Trig.toRad(dir));
+			ctx.fillText(text, 0, 0);
+		}
+		ctx.restore();
+	}
 	textBaseline(type) {
 		this.ctx.textBaseline = type;
 		return this;
