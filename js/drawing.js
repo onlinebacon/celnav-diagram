@@ -114,7 +114,7 @@ export default class DrawingContext {
 		const dif = b.minus(a);
 		const dist = dif.len();
 
-		this.lineWidth(Math.min(DEF_LINE_WID, 0.1*dist));
+		this.lineWidth(DEF_LINE_WID);
 		ctx.beginPath();
 		this.moveTo(a);
 		this.lineTo(b);

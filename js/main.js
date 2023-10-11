@@ -25,9 +25,9 @@ fillScreenWithCanvas();
 
 window.addEventListener('resize', fillScreenWithCanvas);
 
-Tabs.add('Toggles', '.toggles');
+Tabs.add('Toggles', '.toggles', true);
 Tabs.add('Variables', '.variables');
-Tabs.add('Actions', '.actions', true);
+Tabs.add('Actions', '.actions');
 
 Toggles.create('Observer', 'observer', false);
 Toggles.create('Plumb', 'down', false);
@@ -43,6 +43,8 @@ Toggles.create('GP to GP arc', 'arc', false);
 Toggles.create('GP distance', 'gp_dist', false);
 Toggles.create('Horizontal', 'horizontal', false);
 Toggles.create('Horizon radius', 'hrz_rad', false);
+Toggles.create('Radius', 'radius', false);
+Toggles.create('Observer height', 'obs_height', false);
 
 Scene.init(ctx);
 

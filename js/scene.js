@@ -25,6 +25,7 @@ const COLOR = {
 	z2: '#05c',
 	angle: '#fff',
 	horizontal: 'rgba(0, 255, 255, 0.5)',
+	radius: 'rgba(255, 255, 255, 0.5)',
 };
 
 const earthRadiusMiles = 3958.76;
@@ -181,9 +182,8 @@ const drawGPtoGPArc = () => {
 const drawGPDistance = () => {
 	let dif = (starDir - obsDir + d360)%d360;
 	let dist = Trig.toRad(dif)*earthRadiusMiles;
-	let text = Number(dist.toFixed(2)) + ' mi';
+	let text = Miles.stringify(dist, 4);
 	const dir = obsDir + dif/2;
-	const midDirVec = vec2(0, 1).rot(dir);
 	ctx.fontSize(17).textAlign('right').textBaseline('middle');
 	ctx.textDirOut(text, vec2(0, 0), dir, earthRadius + 5, COLOR.angle);
 };
@@ -193,12 +193,31 @@ const drawHorizontal = () => {
 	const b = obsVecPos.minus(dif);
 	ctx.line(a, b, COLOR.horizontal);
 };
+const drawRadius = () => {
+	const a = vec2(0, 0);
+	const b = vec2(0, earthRadius).rot(obsDir);
+	const m = a.interpolate(b, 0.5);
+	ctx.line(a, b, COLOR.radius);
+	ctx.fontSize(15);
+	ctx.textDirOut(Miles.stringify(earthRadiusMiles), m, obsDir - Trig.deg(90), 5, COLOR.radius);
+};
+const drawObsHeight = () => {
+	const a = vec2(0, earthRadius).rot(obsDir);
+	const b = obsVecPos;
+	const m = a.interpolate(b, 0.5);
+	const len = VALS.obs_height;
+	ctx.line(a, b, COLOR.radius);
+	ctx.fontSize(15);
+	ctx.textDirOut(Miles.stringify(len), m, obsDir - Trig.deg(90), 5, COLOR.radius);
+};
 
 const render = () => {
 	ctx.clear();
 	recalculateVars();
 	ctx.setCenter(...getCenter());
 	drawEarth();
+	if (Toggles.get('radius')) drawRadius();
+	if (Toggles.get('obs_height')) drawObsHeight();
 	if (Toggles.get('star_gp_sight')) drawEarthCenterStarLine();
 	if (Toggles.get('hrz_rad')) drawHorizonRadius();
 	if (Toggles.get('hrz')) drawHorizonLine();
