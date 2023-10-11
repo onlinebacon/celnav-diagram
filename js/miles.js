@@ -11,7 +11,7 @@ const units = [{
 
 const suffixRegex = /[a-z]+\s*$/i;
 
-const parse_2 = (string) => {
+export const parse = (string) => {
     const suffix = string.match(suffixRegex)?.[0].trim();
     if (suffix == null) {
         return Number(string);
@@ -22,11 +22,6 @@ const parse_2 = (string) => {
         return NaN;
     }
     return unit.value*Number(string);
-};
-
-export const parse = (val) => {
-    console.log(val, parse_2(val));
-    return parse_2(val);
 };
 
 export const stringify = (value, figures = 5) => {

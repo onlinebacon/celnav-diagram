@@ -34,9 +34,12 @@ const horizontalLen = 500;
 const d360 = Trig.deg(360);
 
 // Calculated vars
+let obsDir = 0;
+let starDir = 0;
 let obsHeight = 0;
 let earthRadius = 0;
 let starHeight = 0;
+let dip = 0;
 let obsVecPos = vec2();
 let starVecPos = vec2();
 let obsVecDir = vec2();
@@ -65,19 +68,22 @@ const getCenter = () => {
 };
 
 const recalculateVars = () => {
+	const angleOffset = VALS.cam_rot;
+	obsDir = VALS.obs_dir + angleOffset;
+	starDir = VALS.star_dir + angleOffset;
 	earthRadius = earthRadiusMiles*VALS.scale;
 	starHeight = VALS.star_height*VALS.scale;
 	obsHeight = VALS.obs_height*VALS.scale;
-	const starVecDir = vec2(0, 1).rot(VALS.star_dir);
-	obsVecDir = vec2(0, 1).rot(VALS.obs_dir);
+	const starVecDir = vec2(0, 1).rot(starDir);
+	obsVecDir = vec2(0, 1).rot(obsDir);
 	obsVecPos = obsVecDir.scale(earthRadius + obsHeight);
 	starVecPos = starVecDir.scale(earthRadius + starHeight);
 	obsGPVecPos = obsVecDir.scale(earthRadius);
 	starGPVecPos = starVecDir.scale(earthRadius);
 	const hip = earthRadius + obsHeight;
 	const adj = earthRadius;
-	const dip = Trig.acos(adj/hip);
-	hrzVecDir = vec2(1, 0).rot(VALS.obs_dir + dip);
+	dip = Trig.acos(adj/hip);
+	hrzVecDir = vec2(1, 0).rot(obsDir + dip);
 	const hrzDist = (hip**2 - adj**2)**0.5;
 	hrzVecPos = obsVecPos.plus(hrzVecDir.scale(hrzDist));
 
@@ -128,12 +134,12 @@ const drawEarthCenterStarLine = () => drawLineWithExcess(
 	COLOR.starSight,
 );
 const drawSextant = () => {
-	const z1VecDir = vec2(0, 1).rot(VALS.obs_dir + VALS.sxt_idx_dir);
-	const z2VecDir = vec2(0, 1).rot(VALS.obs_dir + VALS.sxt_hrz_dir);
+	const z1VecDir = vec2(0, 1).rot(obsDir + VALS.sxt_idx_dir);
+	const z2VecDir = vec2(0, 1).rot(obsDir + VALS.sxt_hrz_dir);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(VALS.arrow_len)), COLOR.z1);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(VALS.arrow_len)), COLOR.z2);
-	let angA = VALS.obs_dir + VALS.sxt_idx_dir;
-	let angB = VALS.obs_dir + VALS.sxt_hrz_dir;
+	let angA = obsDir + VALS.sxt_idx_dir;
+	let angB = obsDir + VALS.sxt_hrz_dir;
 	if (VALS.sxt_idx_dir > VALS.sxt_hrz_dir) {
 		[ angA, angB ] = [ angB, angA ];
 	}
@@ -150,17 +156,20 @@ const drawObserverGP = () => {
 const drawStarGP = () => {
 	ctx.spot(starGPVecPos, COLOR.spot);
 };
-const drawGPDistanceArc = () => {
-	let dif = (VALS.star_dir - VALS.obs_dir + d360)%d360;
-	ctx.arc(vec2(0, 0), earthRadius, VALS.obs_dir, VALS.obs_dir + dif, COLOR.angle);
+const drawGPtoGPArc = () => {
+	let dif = (starDir - obsDir + d360)%d360;
+	ctx.arc(vec2(0, 0), earthRadius, obsDir, obsDir + dif, COLOR.angle);
+};
+const drawGPDistance = () => {
+	let dif = (starDir - obsDir + d360)%d360;
 	let dist = Trig.toRad(dif)*earthRadiusMiles;
 	let text = Number(dist.toFixed(2)) + ' mi';
-	const midDirVec = vec2(0, 1).rot(VALS.obs_dir + dif/2);
+	const midDirVec = vec2(0, 1).rot(obsDir + dif/2);
 	ctx.fontSize(17).textAlign('right').textBaseline('middle');
 	ctx.text(text, midDirVec.scale(earthRadius - 10), COLOR.angle);
 };
 const drawHorizontal = () => {
-	const dif = vec2(horizontalLen/2, 0).rot(VALS.obs_dir);
+	const dif = vec2(horizontalLen/2, 0).rot(obsDir);
 	const a = obsVecPos.plus(dif);
 	const b = obsVecPos.minus(dif);
 	ctx.line(a, b, COLOR.horizontal);
@@ -178,7 +187,8 @@ const render = () => {
 	if (Toggles.get('up')) drawUp();
 	if (Toggles.get('horizontal')) drawHorizontal();
 	if (Toggles.get('star_sight')) drawObsStarSight();
-	if (Toggles.get('arc')) drawGPDistanceArc();
+	if (Toggles.get('arc')) drawGPtoGPArc();
+	if (Toggles.get('gp_dist')) drawGPDistance();
 	if (Toggles.get('sextant')) drawSextant();
 	if (Toggles.get('star')) drawStar();
 	if (Toggles.get('observer')) drawObserver();
@@ -213,11 +223,11 @@ Vars.add({
 Vars.add({
 	label: 'Observer position',
 	name: 'obs_dir',
-	min: 0,
-	max: 360,
+	min: -180,
+	max: 180,
 	init: 10,
 	round: (val) => Number(val.toFixed(2)),
-	parse: (s) => Number(s.repalce(/\s*°\s*$/, '')),
+	parse: (s) => Number(s.replace(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
 });
@@ -225,13 +235,25 @@ Vars.add({
 Vars.add({
 	label: 'Observer height',
 	name: 'obs_height',
-	init: 150,
+	init: 100,
 	min: 0,
 	max: 500,
 	ease: Vars.quadratic,
 	round: (val) => Number(val.toPrecision(3)),
 	parse: (str) => Miles.parse(str),
 	format: (val) => Miles.stringify(val),
+});
+
+Vars.add({
+	label: 'Camera rotation',
+	name: 'cam_rot',
+	init: 0,
+	min: -180,
+	max: 180,
+	round: (val) => Number(val.toFixed(2)),
+	parse: (s) => Number(s.replace(/\s*°\s*$/, '')),
+	format: (val) => val + '°',
+	map: (deg) => Trig.deg(deg),
 });
 
 Vars.add({
@@ -250,9 +272,9 @@ Vars.add({
 	label: 'Star height',
 	name: 'star_height',
 	init: 4000,
-	min: 0,
-	max: 1e6,
-	ease: Vars.quadratic,
+	min: 1,
+	max: 1e8,
+	ease: Vars.exp10,
 	round: (val) => Number(val.toPrecision(3)),
 	parse: (str) => Miles.parse(str),
 	format: (val) => Miles.stringify(val),
@@ -358,7 +380,7 @@ Actions.add('Measure zenith', () => {
 	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
 	const idx1 = 0;
 	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
-	const hrz1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, VALS.obs_dir));
+	const hrz1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, obsDir));
 	Animation.animate(500, (t) => {
 		t = smooth(t);
 		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
@@ -371,7 +393,7 @@ Actions.add('Measure dip', () => {
 	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
 	const idx1 = 90;
 	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
-	const hrz1 = Trig.toDeg(calcDir(obsVecPos, hrzVecPos, VALS.obs_dir));
+	const hrz1 = 90 + Trig.toDeg(dip);
 	Animation.animate(500, (t) => {
 		t = smooth(t);
 		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
@@ -384,7 +406,7 @@ Actions.add('Measure horizon zenith', () => {
 	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
 	const idx1 = 0;
 	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
-	const hrz1 = Trig.toDeg(calcDir(obsVecPos, hrzVecPos, VALS.obs_dir));
+	const hrz1 = 90 + Trig.toDeg(dip);
 	Animation.animate(500, (t) => {
 		t = smooth(t);
 		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
@@ -395,7 +417,7 @@ Actions.add('Measure horizon zenith', () => {
 Actions.add('Measure alt.', () => {
 	Animation.finishAll();
 	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
-	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, VALS.obs_dir));
+	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, obsDir));
 	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
 	const hrz1 = 90;
 	Animation.animate(500, (t) => {
@@ -408,9 +430,10 @@ Actions.add('Measure alt.', () => {
 Actions.add('Measure Hs', () => {
 	Animation.finishAll();
 	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
-	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, VALS.obs_dir));
+	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, obsDir));
 	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
-	const hrz1 = Trig.toDeg(calcDir(obsVecPos, hrzVecPos, VALS.obs_dir));
+	const hrz1 = 90 + Trig.toDeg(dip);
+	console.log({ idx0, idx1, hrz0, hrz1 });
 	Animation.animate(500, (t) => {
 		t = smooth(t);
 		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);

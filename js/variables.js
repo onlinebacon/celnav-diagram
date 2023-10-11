@@ -22,6 +22,15 @@ export const quadratic = {
 	},
 };
 
+export const cubic = {
+	fromNormal: (normal, min, max) => {
+		return linear.fromNormal(normal**3, min, max);
+	},
+	toNormal: (value, min, max) => {
+		return linear.toNormal(value, min, max)**(1/3);
+	},
+};
+
 export const exp10 = {
 	fromNormal: (normal, min, max) => {
 		const a = Math.log10(min);

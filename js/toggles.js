@@ -30,7 +30,6 @@ export const create = (label, name, value) => {
 export const all = () => {
 	const on = [...document.querySelectorAll('.toggles button.on')];
 	const off = [...document.querySelectorAll('.toggles button:not(.on)')];
-	console.log(on.length, off.length);
 	if (off.length !== 0) {
 		off.forEach(item => item.click());
 	} else {

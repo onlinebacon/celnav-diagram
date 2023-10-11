@@ -25,9 +25,9 @@ fillScreenWithCanvas();
 
 window.addEventListener('resize', fillScreenWithCanvas);
 
-Tabs.add('Toggles', '.toggles', true);
+Tabs.add('Toggles', '.toggles');
 Tabs.add('Variables', '.variables');
-Tabs.add('Actions', '.actions');
+Tabs.add('Actions', '.actions', true);
 
 Toggles.create('Observer', 'observer', false);
 Toggles.create('Plumb', 'down', false);
@@ -39,7 +39,8 @@ Toggles.create('Star GP sight', 'star_gp_sight', false);
 Toggles.create('Star GP', 'star_gp', false);
 Toggles.create('Horizon', 'hrz', false);
 Toggles.create('Sextant', 'sextant', false);
-Toggles.create('GP distance', 'arc', false);
+Toggles.create('GP to GP arc', 'arc', false);
+Toggles.create('GP distance', 'gp_dist', false);
 Toggles.create('Horizontal', 'horizontal', false);
 Toggles.create('Horizon radius', 'hrz_rad', false);
 
@@ -48,7 +49,10 @@ Scene.init(ctx);
 window.addEventListener('keydown', e => {
 	const { code } = e;
 	const focused = document.querySelector('input[type="text"]:focus');
-	if (!focused && code.startsWith('Digit')) {
+	if (focused) {
+		return;
+	}
+	if (code.startsWith('Digit')) {
 		const digit = code.replace('Digit', '');
 		const index = digit === '0' ? 9 : digit - 1;
 		const e = document.querySelectorAll('.tabs button')[index];
@@ -56,7 +60,7 @@ window.addEventListener('keydown', e => {
 			e.click();
 		}
 	}
-	if (!focused && code.startsWith('Numpad')) {
+	if (code.startsWith('Numpad')) {
 		const digit = code.replace('Numpad', '');
 		const index = digit === '0' ? 9 : digit - 1;
 		const e = document.querySelectorAll('.tab-content:not(.hidden) button')[index];
