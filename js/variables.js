@@ -74,10 +74,11 @@ const setNormal = (config, normal, round = true) => {
 inputRange.addEventListener('input', () => {
 	const value = setNormal(currentVarConfig, Number(inputRange.value));
 	inputText.value = currentVarConfig.format(value);
+	currentVarConfig.onuserchange();
 });
 
 inputText.addEventListener('change', () => {
-	const { name, min, max, ease, parse, map } = currentVarConfig;
+	const { name, min, max, ease, parse, map, onuserchange } = currentVarConfig;
 	const value = parse(inputText.value);
 	if (isNaN(value)) {
 		return;
@@ -86,6 +87,7 @@ inputText.addEventListener('change', () => {
 	VALS[name] = map(value);
 	const normal = ease.toNormal(value, min, max);
 	inputRange.value = normal;
+	onuserchange();
 });
 
 export const add = ({
@@ -99,8 +101,9 @@ export const add = ({
 	format = (value) => value.toString(),
 	parse = (s) => Number(s),
 	map = (value) => value,
+	onuserchange = () => {},
 }) => {
-	const config = { label, name, init, min, max, ease, round, format, parse, map };
+	const config = { label, name, init, min, max, ease, round, format, parse, map, onuserchange };
 	const button = DOM.create('button', [ DOM.text(label) ]);
 	document.querySelector('.variables').appendChild(button);
 	VIEW[name] = init;

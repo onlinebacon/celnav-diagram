@@ -335,6 +335,7 @@ Vars.add({
 	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
+	onuserchange: () => idxMirDirType = SIGHT_VAR,
 });
 
 Vars.add({
@@ -348,6 +349,7 @@ Vars.add({
 	parse: (str) => Number(str.replace(/\s*°\s*$/, '')),
 	format: (val) => val + '°',
 	map: (deg) => Trig.deg(deg),
+	onuserchange: () => hrzMirDirType = SIGHT_VAR,
 });
 
 Vars.add({
