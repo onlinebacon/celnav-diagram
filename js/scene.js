@@ -40,6 +40,8 @@ let obsHeight = 0;
 let earthRadius = 0;
 let starHeight = 0;
 let dip = 0;
+let hrzMirDir = 0;
+let idxMirDir = 0;
 let obsVecPos = vec2();
 let starVecPos = vec2();
 let obsVecDir = vec2();
@@ -57,6 +59,15 @@ const CENTER_HRZ   = 0x4;
 let centerVec = vec2(0, 0);
 let center = CENTER_EARTH;
 
+const SIGHT_ANGLE = 0x0;
+const SIGHT_STAR = 0x1;
+const SIGHT_ZENITH = 0x2;
+const SIGHT_HORIZON = 0x3;
+const SIGHT_HORIZONTAL = 0x4;
+
+let idxMirDirType = SIGHT_ANGLE;
+let hrzMirDirType = SIGHT_ANGLE;
+
 const getCenter = () => {
 	switch (center) {
 		case CENTER_VEC: return centerVec;
@@ -65,6 +76,10 @@ const getCenter = () => {
 		case CENTER_STAR: return starVecPos;
 		case CENTER_HRZ: return hrzVecPos;
 	}
+};
+
+const getMirDir = (dirType, def) => {
+	return def;
 };
 
 const recalculateVars = () => {
@@ -86,7 +101,8 @@ const recalculateVars = () => {
 	hrzVecDir = vec2(1, 0).rot(obsDir + dip);
 	const hrzDist = (hip**2 - adj**2)**0.5;
 	hrzVecPos = obsVecPos.plus(hrzVecDir.scale(hrzDist));
-
+	hrzMirDir = getMirDir(hrzMirDirType, VALS.sxt_hrz_dir);
+	idxMirDir = getMirDir(idxMirDirType, VALS.sxt_idx_dir);
 };
 const drawLineWithExcess = (a, b, color) => {
 	const excess = b.minus(a).normalized().scale(lineExcess);
@@ -134,18 +150,18 @@ const drawEarthCenterStarLine = () => drawLineWithExcess(
 	COLOR.starSight,
 );
 const drawSextant = () => {
-	const z1Dir = obsDir + VALS.sxt_idx_dir;
-	const z2Dir = obsDir + VALS.sxt_hrz_dir;
+	const z1Dir = obsDir + idxMirDir;
+	const z2Dir = obsDir + hrzMirDir;
 	const z1VecDir = vec2(0, 1).rot(z1Dir);
 	const z2VecDir = vec2(0, 1).rot(z2Dir);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z1VecDir.scale(VALS.arrow_len)), COLOR.z1);
 	ctx.arrow(obsVecPos, obsVecPos.plus(z2VecDir.scale(VALS.arrow_len)), COLOR.z2);
-	let angA = obsDir + VALS.sxt_idx_dir;
-	let angB = obsDir + VALS.sxt_hrz_dir;
-	if (VALS.sxt_idx_dir > VALS.sxt_hrz_dir) {
+	let angA = obsDir + idxMirDir;
+	let angB = obsDir + hrzMirDir;
+	if (idxMirDir > hrzMirDir) {
 		[ angA, angB ] = [ angB, angA ];
 	}
-	const reading = Number(Trig.toDeg(VALS.sxt_hrz_dir - VALS.sxt_idx_dir).toFixed(2)) + '°';
+	const reading = Number(Trig.toDeg(hrzMirDir - idxMirDir).toFixed(2)) + '°';
 	ctx.arc(obsVecPos, VALS.arrow_len/2, angA, angB, COLOR.angle);
 	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(VALS.arrow_len/2 + 3));
 	ctx.fontSize(17);
@@ -380,9 +396,9 @@ const calcDir = (a, b, offset = 0) => {
 
 Actions.add('Measure zenith', () => {
 	Animation.finishAll();
-	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
+	const idx0 = Trig.toDeg(idxMirDir);
 	const idx1 = 0;
-	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const hrz0 = Trig.toDeg(hrzMirDir);
 	const hrz1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, obsDir));
 	Animation.animate(500, (t) => {
 		t = smooth(t);
@@ -391,11 +407,11 @@ Actions.add('Measure zenith', () => {
 	});
 });
 
-Actions.add('Measure dip', () => {
+Actions.add('Measure Hs', () => {
 	Animation.finishAll();
-	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
-	const idx1 = 90;
-	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const idx0 = Trig.toDeg(idxMirDir);
+	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, obsDir));
+	const hrz0 = Trig.toDeg(hrzMirDir);
 	const hrz1 = 90 + Trig.toDeg(dip);
 	Animation.animate(500, (t) => {
 		t = smooth(t);
@@ -406,9 +422,22 @@ Actions.add('Measure dip', () => {
 
 Actions.add('Measure horizon zenith', () => {
 	Animation.finishAll();
-	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
+	const idx0 = Trig.toDeg(idxMirDir);
 	const idx1 = 0;
-	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const hrz0 = Trig.toDeg(hrzMirDir);
+	const hrz1 = 90 + Trig.toDeg(dip);
+	Animation.animate(500, (t) => {
+		t = smooth(t);
+		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
+		Vars.set('sxt_hrz_dir', hrz0 + (hrz1 - hrz0)*t);
+	});
+});
+
+Actions.add('Measure dip', () => {
+	Animation.finishAll();
+	const idx0 = Trig.toDeg(idxMirDir);
+	const idx1 = 90;
+	const hrz0 = Trig.toDeg(hrzMirDir);
 	const hrz1 = 90 + Trig.toDeg(dip);
 	Animation.animate(500, (t) => {
 		t = smooth(t);
@@ -419,23 +448,10 @@ Actions.add('Measure horizon zenith', () => {
 
 Actions.add('Measure alt.', () => {
 	Animation.finishAll();
-	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
+	const idx0 = Trig.toDeg(idxMirDir);
 	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, obsDir));
-	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
+	const hrz0 = Trig.toDeg(hrzMirDir);
 	const hrz1 = 90;
-	Animation.animate(500, (t) => {
-		t = smooth(t);
-		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
-		Vars.set('sxt_hrz_dir', hrz0 + (hrz1 - hrz0)*t);
-	});
-});
-
-Actions.add('Measure Hs', () => {
-	Animation.finishAll();
-	const idx0 = Trig.toDeg(VALS.sxt_idx_dir);
-	const idx1 = Trig.toDeg(calcDir(obsVecPos, starVecPos, obsDir));
-	const hrz0 = Trig.toDeg(VALS.sxt_hrz_dir);
-	const hrz1 = 90 + Trig.toDeg(dip);
 	Animation.animate(500, (t) => {
 		t = smooth(t);
 		Vars.set('sxt_idx_dir', idx0 + (idx1 - idx0)*t);
