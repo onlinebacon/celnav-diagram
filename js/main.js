@@ -45,6 +45,7 @@ Toggles.create('Horizontal', 'horizontal', false);
 Toggles.create('Horizon radius', 'hrz_rad', false);
 Toggles.create('Radius', 'radius', false);
 Toggles.create('Observer height', 'obs_height', false);
+Toggles.create('Angle distance', 'angle_dist', false);
 
 Scene.init(ctx);
 

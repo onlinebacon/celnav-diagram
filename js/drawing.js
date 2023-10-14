@@ -17,13 +17,25 @@ export default class DrawingContext {
 		this.canvasSize(canvas.width, canvas.height);
 		this.setCenter(0, 0);
 	}
+	mightBeOnScreen([ x, y ]) {
+		const { cx, cy } = this;
+		const distSqr = (x - cx)**2 + (y - cy)**2;
+		if (distSqr > this.scrRadSqr) {
+			return false;
+		}
+		return true;
+	}
 	canvasSize(width, height) {
 		const { canvas } = this;
 		canvas.width = width;
 		canvas.height = height;
+		this.scrRadSqr = (width/2)**2 + (height/2)**2;
+		this.scrRad = Math.sqrt(this.scrRadSqr);
+		this.scrDiam = this.scrRad*2;
 		return this;
 	}
 	setCenter(x, y) {
+		this.center = vec2(x, y);
 		this.cx = x;
 		this.cy = y;
 		return this;
@@ -105,6 +117,14 @@ export default class DrawingContext {
 		return this;
 	}
 	line(a, b, color = null) {
+		const aInScr = this.mightBeOnScreen(a);
+		const bInScr = this.mightBeOnScreen(b);
+		if (aInScr && !bInScr) {
+			b = a.plus(b.minus(a).normalized().scale(this.scrDiam));
+		}
+		if (bInScr && !aInScr) {
+			a = b.plus(a.minus(b).normalized().scale(this.scrDiam));
+		}
 		const { ctx } = this;
 		if (color !== null) {
 			ctx.fillStyle = color;

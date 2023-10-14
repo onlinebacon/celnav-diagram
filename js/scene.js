@@ -26,6 +26,7 @@ const COLOR = {
 	angle: '#fff',
 	horizontal: 'rgba(0, 255, 255, 0.5)',
 	radius: 'rgba(255, 255, 255, 0.5)',
+	text: '#ccc',
 };
 
 const earthRadiusMiles = 3958.76;
@@ -91,8 +92,8 @@ const getMirDir = (dirType, def) => {
 
 const recalculateVars = () => {
 	const angleOffset = VALS.cam_rot;
-	obsDir = VALS.obs_dir + angleOffset;
-	starDir = VALS.star_dir + angleOffset;
+	obsDir = (VALS.obs_dir + angleOffset + d360*2) % d360;
+	starDir = (VALS.star_dir + angleOffset + d360*2) % d360;
 	earthRadius = earthRadiusMiles*VALS.scale;
 	starHeight = VALS.star_height*VALS.scale;
 	obsHeight = VALS.obs_height*VALS.scale;
@@ -173,7 +174,7 @@ const drawSextant = () => {
 	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(VALS.arrow_len/2 + 3));
 	ctx.fontSize(17);
 	ctx.textAlign('left').textBaseline('middle');
-	ctx.textDirOut(reading, textVecPos, (angA + angB)/2, 5, COLOR.angle);
+	ctx.textDirOut(reading, textVecPos, (angA + angB)/2, 5, COLOR.text);
 };
 const drawObserverGP = () => {
 	ctx.spot(obsGPVecPos, COLOR.spot);
@@ -191,7 +192,19 @@ const drawGPDistance = () => {
 	let text = Miles.stringify(dist, 4);
 	const dir = obsDir + dif/2;
 	ctx.fontSize(17).textAlign('right').textBaseline('middle');
-	ctx.textDirOut(text, vec2(0, 0), dir, earthRadius + 5, COLOR.angle);
+	ctx.textDirOut(text, vec2(0, 0), dir, earthRadius + 5, COLOR.text);
+};
+const drawAngleDistance = () => {
+	const a = obsDir;
+	let b = starDir;
+	const dif = (b - a + d360*2) % d360;
+	b = a + dif;
+	const r = earthRadius/3;
+	ctx.spot(vec2(0, r).rot(a), COLOR.spot);
+	ctx.spot(vec2(0, r).rot(b), COLOR.spot);
+	ctx.arc(vec2(0, 0), r, a, b, COLOR.angle);
+	const text = Number(Trig.toDeg(dif).toFixed(2)) + '°';
+	ctx.fontSize(17).textDirOut(text, vec2(0, 0), a + dif/2, r + 10, COLOR.text);
 };
 const drawHorizontal = () => {
 	const dif = vec2(horizontalLen/2, 0).rot(obsDir);
@@ -204,8 +217,8 @@ const drawRadius = () => {
 	const b = vec2(0, earthRadius).rot(obsDir);
 	const m = a.interpolate(b, 0.5);
 	ctx.line(a, b, COLOR.radius);
-	ctx.fontSize(15);
-	ctx.textDirOut(Miles.stringify(earthRadiusMiles, 6), m, obsDir - Trig.deg(90), 5, COLOR.radius);
+	ctx.fontSize(17);
+	ctx.textDirOut(Miles.stringify(earthRadiusMiles, 6), m, obsDir - Trig.deg(90), 5, COLOR.text);
 };
 const drawObsHeight = () => {
 	const a = vec2(0, earthRadius).rot(obsDir);
@@ -213,8 +226,8 @@ const drawObsHeight = () => {
 	const m = a.interpolate(b, 0.5);
 	const len = VALS.obs_height;
 	ctx.line(a, b, COLOR.radius);
-	ctx.fontSize(15);
-	ctx.textDirOut(Miles.stringify(len, 6), m, obsDir - Trig.deg(90), 5, COLOR.radius);
+	ctx.fontSize(17);
+	ctx.textDirOut(Miles.stringify(len, 6), m, obsDir - Trig.deg(90), 5, COLOR.text);
 };
 
 const render = () => {
@@ -232,6 +245,7 @@ const render = () => {
 	if (Toggles.get('horizontal')) drawHorizontal();
 	if (Toggles.get('star_sight')) drawObsStarSight();
 	if (Toggles.get('arc')) drawGPtoGPArc();
+	if (Toggles.get('angle_dist')) drawAngleDistance();
 	if (Toggles.get('gp_dist')) drawGPDistance();
 	if (Toggles.get('sextant')) drawSextant();
 	if (Toggles.get('star')) drawStar();
