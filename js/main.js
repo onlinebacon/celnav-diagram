@@ -12,11 +12,11 @@ let full_screen = true;
 
 const fillScreenWithCanvas = () => {
 	if (full_screen) {
-		canvas.style.margin = '40px 0px 0px 0px';
-		ctx.canvasSize(window.innerWidth, window.innerHeight - 40);
+		canvas.style.margin = '29px 0px 0px 0px';
+		ctx.canvasSize(window.innerWidth, window.innerHeight - 29);
 	} else {
 		ctx.canvasSize(800, 600);
-		canvas.style.marginTop = 40 + ((innerHeight - 600) >>> 1);
+		canvas.style.marginTop = 29 + ((innerHeight - 600) >>> 1);
 		canvas.style.marginLeft = (innerWidth - 800) >>> 1;
 	}
 };
