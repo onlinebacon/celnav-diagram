@@ -44,7 +44,7 @@ export default class DrawingContext {
 		const { canvas, cx, cy } = this;
 		x = canvas.width/2 + (x - cx);
 		y = canvas.height/2 - (y - cy);
-		return [ x, y ];
+		return vec2(x, y);
 	}
 	clear() {
 		this.ctx.fillStyle = this.bgColor;
@@ -98,11 +98,43 @@ export default class DrawingContext {
 		return this;
 	}
 	circle(center, radius, strokeColor = null, fillColor = null) {
-		const { ctx } = this;
+		const { ctx, cx, cy } = this;
+		const [ x, y ] = center;
+		const rel = vec2(x - cx, y - cy);
+		const dir = rel.normalized();
+		const dist = rel.len();
+		const dif = dist - radius;
+		if (dif > this.scrRad) {
+			return this;
+		}
 
 		this.lineWidth(DEF_LINE_WID);
-		ctx.beginPath();
-		ctx.arc(...this.fromCenter(center), radius, 0, TAU);
+
+		if (radius > 100*this.scrRad) {
+			const tan = this.center.plus(dir.scale(dif));
+			const sideDir = vec2(dir.y, -dir.x);
+			const side = this.scrRad;
+			const a = tan.plus(sideDir.scale(-side));
+			const b = tan.plus(sideDir.scale(+side));
+			const c = b.plus(dir.scale(side));
+			const d = a.plus(dir.scale(side));
+			const n = 200;
+			ctx.strokeStyle = strokeColor;
+			ctx.beginPath();
+			this.moveTo(d);
+			for (let i=0; i<=n; ++i) {
+				const offset = (2*i/n - 1)*side;
+				const base = tan.plus(sideDir.scale(offset));
+				const drop = radius - Math.sqrt(radius**2 - offset**2);
+				const point = base.plus(dir.scale(drop));
+				this.lineTo(point);
+			}
+			this.lineTo(c);
+			this.lineTo(d);
+		} else {
+			ctx.beginPath();
+			ctx.arc(...this.fromCenter(center), radius, 0, TAU);
+		}
 
 		if (fillColor !== null) {
 			ctx.fillStyle = fillColor;
