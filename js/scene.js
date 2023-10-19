@@ -229,6 +229,22 @@ const drawObsHeight = () => {
 	ctx.fontSize(17);
 	ctx.textDirOut(Miles.stringify(len, 6), m, obsDir - Trig.deg(90), 5, COLOR.text);
 };
+const drawScale = () => {
+	const targetLen = 100;
+	const gap = 20;
+	const a = vec2(ctx.leftX + gap, ctx.bottomY + gap);
+	const text = Miles.stringify(targetLen/VALS.scale)
+		.replace(/\d+(\.\d+)/, (val) => {
+			return Number(val).toPrecision(1);
+		});
+	const miles = Miles.parse(text);
+	const len = miles*VALS.scale;
+	const b = vec2(a.x + len, a.y);
+	ctx.line(a, b, '#fff');
+	ctx.textAlign('left').textBaseline('bottom');
+	ctx.fontSize(15);
+	ctx.text(Miles.stringify(miles), a.plus(vec2(0, 5)));
+};
 
 const render = () => {
 	ctx.clear();
@@ -254,6 +270,7 @@ const render = () => {
 	drawEarthCenter();
 	if (Toggles.get('gp')) drawObserverGP();
 	if (Toggles.get('star_gp')) drawStarGP();
+	drawScale();
 };
 
 const frameLoop = () => {

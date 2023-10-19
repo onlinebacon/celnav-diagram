@@ -17,6 +17,12 @@ export default class DrawingContext {
 		this.canvasSize(canvas.width, canvas.height);
 		this.setCenter(0, 0);
 	}
+	get leftX() {
+		return this.cx - this.canvas.width/2;
+	}
+	get bottomY() {
+		return this.cy - this.canvas.height/2;
+	}
 	mightBeOnScreen([ x, y ]) {
 		const { cx, cy } = this;
 		const distSqr = (x - cx)**2 + (y - cy)**2;
@@ -98,6 +104,10 @@ export default class DrawingContext {
 		return this;
 	}
 	circle(center, radius, strokeColor = null, fillColor = null) {
+		if (this.mightBeInScreen(center) && radius > 3*this.scrRad) {
+			radius = 3*this.scrRad;
+		}
+
 		const { ctx, cx, cy } = this;
 		const [ x, y ] = center;
 		const rel = vec2(x - cx, y - cy);
