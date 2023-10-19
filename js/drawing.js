@@ -163,9 +163,6 @@ export default class DrawingContext {
 			ctx.strokeStyle = color;
 		}
 
-		const dif = b.minus(a);
-		const dist = dif.len();
-
 		this.lineWidth(DEF_LINE_WID);
 		ctx.beginPath();
 		this.moveTo(a);
@@ -173,6 +170,10 @@ export default class DrawingContext {
 		ctx.stroke();
 
 		return this;
+	}
+	mightBeInScreen([ x, y ]) {
+		const { cx, cy, scrRadSqr } = this;
+		return (x - cx)**2 + (y - cy)**2 <= scrRadSqr;
 	}
 	arrow(a, b, color = null) {
 		const { ctx } = this;
@@ -185,6 +186,17 @@ export default class DrawingContext {
 		const dist = dif.len();
 		const tipSize = Math.min(dist*0.3, DEF_LINE_WID*8);
 		const dir = dif.normalized();
+
+		const maxDist = this.scrRad*10;
+		if (dist > maxDist) {
+			const aInScr = this.mightBeInScreen(a);
+			const bInScr = this.mightBeInScreen(b);
+			if (aInScr && !bInScr) {
+				b = a.plus(dir.scale(maxDist));
+			} else if (bInScr && !aInScr) {
+				a = b.minus(dir.scale(maxDist));
+			}
+		}
 
 		this.lineWidth(Math.min(DEF_LINE_WID, 0.1*dist));
 		ctx.beginPath();
