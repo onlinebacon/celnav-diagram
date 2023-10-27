@@ -40,7 +40,6 @@ let obsDir = 0;
 let starDir = 0;
 let obsHeight = 0;
 let earthRadius = 0;
-let starHeight = 0;
 let dip = 0;
 let hrzMirDir = 0;
 let idxMirDir = 0;
@@ -95,12 +94,12 @@ const recalculateVars = () => {
 	obsDir = (VALS.obs_dir + angleOffset + d360*2) % d360;
 	starDir = (VALS.star_dir + angleOffset + d360*2) % d360;
 	earthRadius = earthRadiusMiles*VALS.scale;
-	starHeight = VALS.star_height*VALS.scale;
+	const starDist = VALS.star_dist*VALS.scale;
 	obsHeight = VALS.obs_height*VALS.scale;
 	const starVecDir = vec2(0, 1).rot(starDir);
 	obsVecDir = vec2(0, 1).rot(obsDir);
 	obsVecPos = obsVecDir.scale(earthRadius + obsHeight);
-	starVecPos = starVecDir.scale(earthRadius + starHeight);
+	starVecPos = starVecDir.scale(starDist);
 	obsGPVecPos = obsVecDir.scale(earthRadius);
 	starGPVecPos = starVecDir.scale(earthRadius);
 	const hip = earthRadius + obsHeight;
@@ -169,7 +168,7 @@ const drawSextant = () => {
 	if (idxMirDir > hrzMirDir) {
 		[ angA, angB ] = [ angB, angA ];
 	}
-	const reading = Number(Trig.toDeg(hrzMirDir - idxMirDir).toFixed(2)) + '°';
+	const reading = Number(Trig.toDeg(hrzMirDir - idxMirDir).toFixed(4)) + '°';
 	ctx.arc(obsVecPos, VALS.arrow_len/2, angA, angB, COLOR.angle);
 	const textVecPos = obsVecPos.plus(vec2(0, 1).rot((angA + angB)/2).scale(VALS.arrow_len/2 + 3));
 	ctx.fontSize(17);
@@ -344,10 +343,10 @@ Vars.add({
 });
 
 Vars.add({
-	label: 'Star height',
-	name: 'star_height',
-	init: 4000,
-	min: 1,
+	label: 'Star distance',
+	name: 'star_dist',
+	init: 8000,
+	min: earthRadiusMiles,
 	max: 5e7,
 	ease: Vars.exp10,
 	round: (val) => Number(val.toPrecision(3)),
